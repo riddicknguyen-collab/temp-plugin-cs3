@@ -28,6 +28,14 @@
 | 9 Manual CloudStream Verification | **Chưa làm** — cần thiết bị Android. Đây là phase duy nhất chứng minh selector còn khớp site đang sống. |
 | 10 Release Workflow | CI chạy xanh, tự publish `.cs3` + `plugins.json` + `repo.json` lên branch `builds`. Bước cài trong app còn chờ repo chuyển sang public, vì `raw.githubusercontent.com` trả 404 cho repo private. |
 
+**Cảnh báo về PRD:** mô hình trang trong PRD không khớp site thật. Trang chi tiết **không**
+chứa danh sách tập — nó chỉ có `.film-buttons` với một nút cho mỗi server, và danh sách tập
+nằm ở trang xem. Metadata cũng không nằm ở `.detail-infor-content` mà ở `.anisc-info`
+(`span.item-head` + `span.name`). Ngoài ra site đã đổi sang `yanhh3d.pw`, poster lazy-load
+qua `data-src`, và mỗi phim có hai server Thuyết Minh/Vietsub — dự án chỉ dùng Vietsub.
+Đọc code và fixtures trong `YanHHProvider/`, đừng đọc PRD, khi cần biết cấu trúc thật.
+Trang thật đã lưu ở `docs/tham-khao/`.
+
 Ba lệch có chủ ý so với plan:
 
 - `loadLinks()` chỉ tính embed là thành công khi `loadExtractor()` trả `true`, thay vì tính ngay lúc delegate. Trả `true` mà không có link nào sẽ cho người dùng một danh sách nguồn rỗng thay vì báo lỗi.
