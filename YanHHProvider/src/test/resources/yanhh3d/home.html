@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>Mới cập nhật - YanHH3D</title>
+</head>
+<body>
+<div class="film_list-wrap">
+
+    <!-- 1. Ordinary card: relative poster, title attribute, both ticks. -->
+    <div class="flw-item">
+        <div class="film-poster">
+            <img class="film-poster-img" src="/uploads/poster/dau-pha-thuong-khung.jpg" alt="Đấu Phá Thương Khung">
+            <div class="tick">
+                <div class="tick-rate">Tập 145</div>
+                <div class="tick-dub">1080p</div>
+            </div>
+        </div>
+        <div class="film-detail">
+            <h3 class="film-name">
+                <a href="/phim/dau-pha-thuong-khung" title="Đấu Phá Thương Khung">Đấu Phá Thương Khung</a>
+            </h3>
+        </div>
+    </div>
+
+    <!-- 2. Card still pointing at the old domain, and no quality tick. -->
+    <div class="flw-item">
+        <div class="film-poster">
+            <img class="film-poster-img" src="https://yanhh3d.ac/uploads/poster/tinh-gioi.jpg" alt="Tinh Giới">
+            <div class="tick">
+                <div class="tick-rate">Tập 20</div>
+            </div>
+        </div>
+        <div class="film-detail">
+            <h3 class="film-name">
+                <a href="https://yanhh3d.ac/phim/tinh-gioi" title="Tinh Giới">Tinh Giới</a>
+            </h3>
+        </div>
+    </div>
+
+    <!-- 3. No poster and no title attribute, so the anchor text has to be used. -->
+    <div class="flw-item">
+        <div class="film-detail">
+            <h3 class="film-name">
+                <a href="/phim/vo-than">Võ Thần</a>
+            </h3>
+        </div>
+    </div>
+
+    <!-- 4. Protocol-relative poster on a CDN host, and an href without a leading slash. -->
+    <div class="flw-item">
+        <div class="film-poster">
+            <img class="film-poster-img" src="//cdn.yanhh3d.love/poster/thon-phe-tinh-khong.jpg">
+        </div>
+        <div class="film-detail">
+            <h3 class="film-name">
+                <a href="phim/thon-phe-tinh-khong" title="Thôn Phệ Tinh Không">Thôn Phệ Tinh Không</a>
+            </h3>
+        </div>
+    </div>
+
+    <!-- 5. Broken card: empty href. Must be skipped, not crash. -->
+    <div class="flw-item">
+        <div class="film-detail">
+            <h3 class="film-name">
+                <a href="" title="Phim Lỗi">Phim Lỗi</a>
+            </h3>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

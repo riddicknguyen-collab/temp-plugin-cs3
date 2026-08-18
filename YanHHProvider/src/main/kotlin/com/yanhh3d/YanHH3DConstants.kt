@@ -1,0 +1,99 @@
+package com.yanhh3d
+
+/**
+ * Everything that changes when YanHH3D changes domain, routes or markup.
+ * No other file in this module should hardcode these values.
+ */
+object YanHH3DConstants {
+    const val PROVIDER_NAME = "YanHH3D"
+
+    /** Prefix for every log line this provider writes. */
+    const val LOG_TAG = "[YanHH3D]"
+
+    const val DEFAULT_BASE_URL = "https://yanhh3d.love"
+
+    /**
+     * Hosts YanHH3D has been served from. A URL stored under any of them is remapped
+     * onto the current base URL, so old bookmarks keep working after a domain change.
+     */
+    val KNOWN_DOMAINS = listOf(
+        "yanhh3d.love",
+        "yanhh3d.ac",
+    )
+
+    const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+        "AppleWebKit/537.36 (KHTML, like Gecko) " +
+        "Chrome/120.0.0.0 Safari/537.36"
+
+    const val SEARCH_PATH = "/search"
+    const val SEARCH_QUERY_PARAM = "keysearch"
+    const val PAGE_QUERY_PARAM = "page"
+
+    /** Path to display name, in the order they should appear on the CloudStream home screen. */
+    val MAIN_PAGES = listOf(
+        "/moi-cap-nhat" to "Mới cập nhật",
+        "/the-loai/huyen-huyen" to "Huyền Huyễn",
+        "/the-loai/xuyen-khong" to "Xuyên Không",
+        "/the-loai/trung-sinh" to "Trùng Sinh",
+        "/the-loai/tien-hiep" to "Tiên Hiệp",
+        "/the-loai/co-trang" to "Cổ Trang",
+        "/the-loai/hai-huoc" to "Hài Hước",
+        "/the-loai/kiem-hiep" to "Kiếm Hiệp",
+        "/the-loai/hien-dai" to "Hiện Đại",
+    )
+}
+
+/**
+ * CSS selectors, kept together so a live-site markup change is a one-file edit.
+ */
+object YanHH3DSelectors {
+    const val MOVIE_ITEM = ".flw-item"
+    const val MOVIE_ITEM_LINK = "a[href]"
+    const val MOVIE_ITEM_POSTER = "img[src]"
+    const val MOVIE_ITEM_CURRENT_EPISODE = ".tick-rate"
+    const val MOVIE_ITEM_QUALITY = ".tick-dub"
+
+    const val DETAIL_CONTAINER = ".detail-infor-content"
+    const val SERVER_LINK = "div[class*=list-severs] a[data-src]"
+
+    const val CANONICAL = "link[rel=canonical]"
+    const val OG_URL = "meta[property=og:url]"
+    const val OG_TITLE = "meta[property=og:title]"
+    const val OG_IMAGE = "meta[property=og:image]"
+    const val OG_DESCRIPTION = "meta[property=og:description]"
+    const val VIDEO_DURATION = "meta[property=video:duration]"
+}
+
+/**
+ * Vietnamese labels the detail page prints next to its metadata. Matched without the
+ * trailing colon, because the site is not consistent about spacing around it.
+ */
+object YanHH3DLabels {
+    const val STATUS = "Trạng thái"
+    const val YEAR = "Năm"
+    const val GENRES = "Thể loại"
+}
+
+object YanHH3DPatterns {
+    /** A plausible release year, so a stray number in the same row cannot win. */
+    val YEAR = Regex("(?:19|20)\\d{2}")
+
+    val EPISODE_NUMBER = Regex("(\\d+)")
+
+    /** Hosts or paths that mean "this is a player page, hand it to an extractor". */
+    val EMBED_HINTS = listOf("abyss", "embed", "player", "short.icu")
+}
+
+/**
+ * Quality values as plain ints so the parser stays free of CloudStream classes and
+ * remains unit-testable. These mirror `com.lagradost.cloudstream3.utils.Qualities`
+ * exactly (verified against the stub jar), so the provider can hand them straight
+ * to an ExtractorLink.
+ */
+object YanHH3DQualities {
+    const val UNKNOWN = 400
+    const val P480 = 480
+    const val P720 = 720
+    const val P1080 = 1080
+    const val P2160 = 2160
+}

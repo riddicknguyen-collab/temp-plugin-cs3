@@ -10,13 +10,15 @@ Build a private CloudStream 3 Kotlin provider for YanHH3D. The provider should s
 - `.vscode/` - Local editor settings for this template; do not rely on it for build behavior.
 - `docs/` - Product requirements and implementation planning documents for the YanHH3D provider.
 - `ExampleProvider/` - Working CloudStream sample plugin module; use it as the local reference for module shape, plugin entrypoint, resources, and Gradle metadata.
-- `YanHHProvider/` - Target module folder for the YanHH3D provider; currently empty and should become the real implementation module.
+- `YanHHProvider/` - The YanHH3D provider module: plugin entrypoint, provider, parser, domain resolver, constants, models, and parser tests with HTML fixtures.
 - `gradle/` - Gradle wrapper files; keep these in sync with the template and do not edit manually unless upgrading Gradle intentionally.
 - `build.gradle.kts` - Root Gradle configuration shared by all plugin modules, including Android, Kotlin, CloudStream, Jsoup, and build defaults.
 - `settings.gradle.kts` - Auto-includes every top-level directory that contains `build.gradle.kts`; a plugin folder is not a module until it has its own build file.
 - `gradle.properties` - Gradle and Android build settings for this repo.
 - `gradlew` - Unix Gradle wrapper entrypoint.
 - `gradlew.bat` - Windows Gradle wrapper entrypoint.
+- `repo.json` - Private CloudStream repository manifest; the URL added to CloudStream points at this file on the `builds` branch.
+- `CHANGELOG.md` - Release notes per plugin version.
 - `README.md` - Upstream CloudStream plugin template instructions.
 - `.gitignore` - Ignore rules for build output and local files.
 
