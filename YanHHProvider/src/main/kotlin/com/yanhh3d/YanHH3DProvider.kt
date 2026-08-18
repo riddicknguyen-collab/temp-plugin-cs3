@@ -19,6 +19,9 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
@@ -147,6 +150,18 @@ class YanHH3DProvider : MainAPI() {
             val sources = parser.parseSources(fetch(episodeUrl))
             log("source count=${sources.size}")
 
+            val resolvedDirectSources = coroutineScope {
+                sources
+                    .filter { it.type != YanSourceType.EMBED }
+                    .map { source ->
+                        async {
+                            source to resolvePlayback(source.url, episodeUrl)
+                        }
+                    }
+                    .awaitAll()
+                    .toMap()
+            }
+
             var found = false
             sources.forEach { source ->
                 when (source.type) {
@@ -160,7 +175,7 @@ class YanHH3DProvider : MainAPI() {
                     // Everything else is resolved by fetching it: the advertised URL
                     // says nothing reliable about what the server actually serves.
                     else -> {
-                        val playback = resolvePlayback(source.url, episodeUrl)
+                        val playback = resolvedDirectSources[source]
                         if (playback == null) {
                             log("source unresolved=${source.name}")
                         } else {
