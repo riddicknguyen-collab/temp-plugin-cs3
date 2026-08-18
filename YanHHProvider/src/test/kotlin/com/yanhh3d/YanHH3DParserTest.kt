@@ -8,8 +8,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Locks the parser contract against local fixtures. Everything here runs on the JVM
- * with no network and no CloudStream classes.
+ * Locks the parser contract against fixtures taken from the live site. Everything here
+ * runs on the JVM with no network and no CloudStream classes.
  */
 class YanHH3DParserTest {
 
@@ -92,71 +92,101 @@ class YanHH3DParserTest {
 
     @Test
     fun `parseDetail prefers canonical over og-url`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/khac")
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/khac")
 
-        assertEquals("https://yanhh3d.pw/phim/dau-pha-thuong-khung", detail.url)
+        assertEquals("https://yanhh3d.pw/nhat-tram-thuong-khung", detail.url)
     }
 
     @Test
     fun `parseDetail reads the open graph metadata`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/dau-pha-thuong-khung")
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/nhat-tram-thuong-khung")
 
-        assertEquals("Đấu Phá Thương Khung", detail.title)
-        assertEquals("https://yanhh3d.pw/uploads/poster/dau-pha-thuong-khung.jpg", detail.posterUrl)
-        assertTrue(detail.description.orEmpty().startsWith("Tiêu Viêm mất sạch tu vi"))
+        assertEquals("Nhất Trảm Thương Khung [Cốc An] Thuyết Minh", detail.title)
+        assertEquals("https://yanhh3d.pw/storage/movies/nhat-tram-thuong-khung.jpg", detail.posterUrl)
+        assertTrue(detail.description.orEmpty().startsWith("Vốn sinh ra"))
     }
 
     @Test
-    fun `parseDetail reads year status and genres from the visible text`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/dau-pha-thuong-khung")
+    fun `parseDetail reads year and status from the info block`() {
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/nhat-tram-thuong-khung")
 
-        assertEquals(2023, detail.year)
-        assertEquals("Đang chiếu", detail.status)
+        assertEquals(2026, detail.year)
+        assertEquals("Đang Chiếu", detail.status)
+    }
+
+    @Test
+    fun `parseDetail takes genres from the info block and not the sidebar menu`() {
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/nhat-tram-thuong-khung")
+
         assertEquals(listOf("Huyền Huyễn", "Tiên Hiệp"), detail.genres)
+        // The sidebar lists every genre on the site; none of it may leak in.
+        assertTrue(detail.genres.none { it == "Cổ Trang" || it == "Hài Hước" || it == "Kiếm Hiệp" })
     }
 
     @Test
-    fun `parseDetail falls back to the input url when the page has no canonical`() {
+    fun `parseDetail picks the vietsub play button and stores it path-only`() {
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/nhat-tram-thuong-khung")
+
+        assertEquals("/sever2/nhat-tram-thuong-khung/tap-5", detail.watchUrl)
+        // The detail page never carries episodes itself.
+        assertTrue(detail.episodes.isEmpty())
+    }
+
+    @Test
+    fun `parseDetail falls back to the input url when the page has no metadata`() {
         val document = Jsoup.parse("<html><head></head><body></body></html>", YanHH3DConstants.DEFAULT_BASE_URL)
 
-        val detail = parser.parseDetail(document, "https://yanhh3d.pw/phim/khong-metadata")
+        val detail = parser.parseDetail(document, "https://yanhh3d.pw/khong-metadata")
 
-        assertEquals("https://yanhh3d.pw/phim/khong-metadata", detail.url)
+        assertEquals("https://yanhh3d.pw/khong-metadata", detail.url)
         assertNull(detail.year)
         assertNull(detail.status)
+        assertNull(detail.watchUrl)
         assertTrue(detail.genres.isEmpty())
-        assertTrue(detail.episodes.isEmpty())
     }
 
     // ------------------------------------------------------------ episodes
 
     @Test
-    fun `parseEpisodes deduplicates across server tabs and sorts numerically`() {
-        val episodes = parser.parseEpisodes(fixture("detail.html"))
+    fun `parseEpisodes takes only the preferred server tab`() {
+        val episodes = parser.parseEpisodes(fixture("episode.html"))
 
-        assertEquals(5, episodes.size)
-        assertEquals(listOf(1, 2, 3, 10, null), episodes.map { it.episodeNumber })
-        // 10 must not sort between 1 and 2.
-        assertEquals("Tập 10", episodes[3].name)
-        // Anything without a number keeps to the end.
-        assertEquals("Tập Đặc Biệt", episodes.last().name)
+        assertEquals(6, episodes.size)
+        // Everything must come from the Vietsub pane, never the dubbed one.
+        assertTrue(episodes.all { it.url.startsWith("/sever2/") })
     }
 
     @Test
-    fun `parseEpisodes stores path-only urls so a domain change cannot break history`() {
-        val episodes = parser.parseEpisodes(fixture("detail.html"))
+    fun `parseEpisodes sorts numerically and keeps unnumbered entries last`() {
+        val episodes = parser.parseEpisodes(fixture("episode.html"))
 
-        assertEquals("/phim/dau-pha-thuong-khung/tap-1", episodes.first().url)
+        assertEquals(listOf(1, 2, 3, 5, 10, null), episodes.map { it.episodeNumber })
+        // 10 must not sort between 1 and 2.
+        assertEquals("Tập 10", episodes[4].name)
+        assertEquals("Đặc Biệt", episodes.last().name)
+    }
+
+    @Test
+    fun `parseEpisodes names bare numbers and stores path-only urls`() {
+        val episodes = parser.parseEpisodes(fixture("episode.html"))
+
+        assertEquals("Tập 1", episodes.first().name)
+        assertEquals("/sever2/nhat-tram-thuong-khung/tap-1", episodes.first().url)
         // The old-domain anchor normalises to the same path form as the rest.
-        assertEquals("/phim/dau-pha-thuong-khung/tap-3", episodes[2].url)
+        assertEquals("/sever2/nhat-tram-thuong-khung/tap-3", episodes[2].url)
         assertTrue(episodes.none { it.url.startsWith("http") })
     }
 
     @Test
     fun `parseEpisodes skips anchors with a blank href`() {
-        val episodes = parser.parseEpisodes(fixture("detail.html"))
+        val episodes = parser.parseEpisodes(fixture("episode.html"))
 
-        assertTrue(episodes.none { it.name == "Tập lỗi" })
+        assertTrue(episodes.none { it.name == "lỗi" })
+    }
+
+    @Test
+    fun `parseEpisodes returns nothing when the container is missing`() {
+        assertTrue(parser.parseEpisodes(fixture("detail.html")).isEmpty())
     }
 
     // ------------------------------------------------------------- sources
@@ -165,29 +195,28 @@ class YanHH3DParserTest {
     fun `parseSources classifies hls embed and unknown entries`() {
         val sources = parser.parseSources(fixture("episode.html"))
 
-        assertEquals(7, sources.size)
+        assertEquals(5, sources.size)
         assertEquals(
             listOf(
                 YanSourceType.HLS,
                 YanSourceType.HLS,
-                YanSourceType.HLS,
-                YanSourceType.HLS,
-                YanSourceType.EMBED,
-                YanSourceType.EMBED,
                 YanSourceType.UNKNOWN,
+                YanSourceType.HLS,
+                YanSourceType.EMBED,
             ),
             sources.map { it.type },
         )
     }
 
     @Test
-    fun `parseSources detects quality from the server name and the url`() {
+    fun `parseSources detects quality from the server name`() {
         val sources = parser.parseSources(fixture("episode.html")).associateBy { it.name }
 
-        assertEquals(YanHH3DQualities.P1080, sources.getValue("HD 1080").quality)
+        assertEquals(YanHH3DQualities.P1080, sources.getValue("1080").quality)
+        assertEquals(YanHH3DQualities.P1080, sources.getValue("1080-").quality)
         assertEquals(YanHH3DQualities.P2160, sources.getValue("4K").quality)
-        assertEquals(YanHH3DQualities.P720, sources.getValue("720p").quality)
-        assertEquals(YanHH3DQualities.UNKNOWN, sources.getValue("Server HLS").quality)
+        // Neither a playlist nor a known embed, so no quality is claimed for it.
+        assertEquals(YanHH3DQualities.UNKNOWN, sources.getValue("HD").quality)
         assertEquals(YanHH3DQualities.UNKNOWN, sources.getValue("Abyss").quality)
     }
 

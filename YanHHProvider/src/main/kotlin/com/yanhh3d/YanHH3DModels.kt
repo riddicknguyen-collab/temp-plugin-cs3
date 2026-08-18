@@ -14,7 +14,11 @@ data class YanMovieItem(
     val qualityLabel: String?,
 )
 
-/** A title page with its metadata and episode list. */
+/**
+ * A title page. The detail page holds metadata only; [watchUrl] points at the page
+ * that actually lists the episodes, which is why [episodes] starts empty and is filled
+ * in by the provider after a second request.
+ */
 data class YanDetail(
     val title: String,
     val url: String,
@@ -23,7 +27,8 @@ data class YanDetail(
     val year: Int?,
     val status: String?,
     val genres: List<String>,
-    val episodes: List<YanEpisode>,
+    val watchUrl: String?,
+    val episodes: List<YanEpisode> = emptyList(),
 )
 
 data class YanEpisode(

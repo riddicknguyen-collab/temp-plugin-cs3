@@ -1,5 +1,26 @@
 # Changelog
 
+## v3
+
+Rebuilt the detail and episode parsing against real pages saved from the site. The
+PRD's page model was wrong, which is why every title showed "coming soon".
+
+- Episodes come from the watch page, not the detail page. The detail page carries no
+  episode list at all, only one play button per server, so `load()` now follows that
+  button and parses the list from the page it leads to.
+- Only the Vietsub server is used. Each title is published twice, "Thuyết Minh" and
+  "Vietsub"; the play button and the episode tab are both picked by that label.
+- Metadata is read from the `.anisc-info` rows (`span.item-head` plus `span.name`),
+  scoped to that block. The sidebar menu repeats the same label words and links every
+  genre on the site, so an unscoped search returned the site menu as the title's genres.
+- Episodes are labelled with the bare number on the page, so a numeric label is
+  displayed as "Tập N".
+- Detail and episode fixtures rebuilt from the saved pages.
+
+Known gap: an episode's "HD" entry is a Facebook CDN play URL rather than a playlist or
+a supported embed host, so it is classified unknown and skipped. The 1080 and 4K
+playlists on the same page are unaffected.
+
 ## v2
 
 Fixes found by running v1 against the live site.

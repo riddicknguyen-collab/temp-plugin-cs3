@@ -102,13 +102,21 @@ class YanHH3DProvider : MainAPI() {
             log("load detail url=$pageUrl")
 
             val detail = parser.parseDetail(fetch(pageUrl), pageUrl)
-            log("parseEpisodes count=${detail.episodes.size}")
+
+            // The detail page carries no episode list, only play buttons into the watch
+            // page, so the episodes cost one more request.
+            val episodes = detail.watchUrl?.let { watchUrl ->
+                val resolved = domainResolver.absoluteUrl(watchUrl)
+                log("load watch url=$resolved")
+                parser.parseEpisodes(fetch(resolved))
+            }.orEmpty()
+            log("parseEpisodes count=${episodes.size}")
 
             newTvSeriesLoadResponse(
                 detail.title,
                 detail.url,
                 TvType.Anime,
-                detail.episodes.map { it.toEpisode() },
+                episodes.map { it.toEpisode() },
             ) {
                 this.posterUrl = detail.posterUrl
                 this.posterHeaders = posterRequestHeaders

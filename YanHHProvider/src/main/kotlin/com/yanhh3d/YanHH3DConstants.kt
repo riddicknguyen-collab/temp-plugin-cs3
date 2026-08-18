@@ -66,7 +66,28 @@ object YanHH3DSelectors {
     const val MOVIE_ITEM_CURRENT_EPISODE = ".tick-rate"
     const val MOVIE_ITEM_QUALITY = ".tick-dub"
 
-    const val DETAIL_CONTAINER = ".detail-infor-content"
+    /**
+     * Detail page. Metadata sits in rows of `span.item-head` (label) plus either a
+     * `span.name` value or genre anchors. Scoped to the info block because the sidebar
+     * menu repeats the same label words.
+     */
+    const val DETAIL_INFO = ".anisc-info"
+    const val DETAIL_INFO_ITEM = ".item"
+    const val DETAIL_INFO_LABEL = "span.item-head"
+    const val DETAIL_INFO_VALUE = "span.name"
+
+    /**
+     * The detail page carries no episode list, only buttons into the watch page, one
+     * per server. Episodes are parsed from the page these lead to.
+     */
+    const val PLAY_BUTTON = ".film-buttons a[href]"
+
+    /** Watch page: episode list, one tab pane per server. */
+    const val EPISODE_CONTAINER = ".detail-infor-content"
+    const val EPISODE_TAB = "a[href^=#]"
+    const val EPISODE_LINK = "a[href]"
+    const val EPISODE_ORDER = ".ssli-order"
+
     const val SERVER_LINK = "div[class*=list-severs] a[data-src]"
 
     const val CANONICAL = "link[rel=canonical]"
@@ -85,6 +106,13 @@ object YanHH3DLabels {
     const val STATUS = "Trạng thái"
     const val YEAR = "Năm"
     const val GENRES = "Thể loại"
+
+    /**
+     * The site publishes each title on two servers, "Thuyết Minh" (dubbed) and
+     * "Vietsub". Only the Vietsub one is wanted, so both the watch-page button and the
+     * episode tab are picked by this label.
+     */
+    const val PREFERRED_SERVER = "Vietsub"
 }
 
 object YanHH3DPatterns {

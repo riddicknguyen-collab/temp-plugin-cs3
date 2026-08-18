@@ -7,6 +7,11 @@ import org.jsoup.nodes.Element
  * All YanHH3D HTML parsing. Pure Jsoup: no network, no CloudStream types, so every
  * rule here is covered by fixtures in `src/test/resources/yanhh3d`.
  *
+ * Note the page split the site actually uses: a title's detail page carries metadata
+ * and nothing else, and the episode list lives on the watch page its play buttons lead
+ * to. [parseDetail] therefore reports a [YanDetail.watchUrl] and leaves episodes empty;
+ * [parseEpisodes] runs against the watch page.
+ *
  * Nothing force-unwraps a selector result; a missing field degrades to null or an
  * empty list rather than taking the provider down.
  */
@@ -41,14 +46,15 @@ class YanHH3DParser(
         }
 
     /**
-     * Title metadata plus episodes. [inputUrl] is the URL we were asked to load and is
-     * only used when the page carries neither a canonical link nor `og:url`.
+     * Title metadata. [inputUrl] is the URL we were asked to load and is only used when
+     * the page carries neither a canonical link nor `og:url`.
+     *
+     * [YanDetail.episodes] is left empty on purpose: the caller has to fetch
+     * [YanDetail.watchUrl] and run [parseEpisodes] on it.
      */
     fun parseDetail(document: Document, inputUrl: String): YanDetail {
         val canonical = document.attrOrNull(YanHH3DSelectors.CANONICAL, "href")
             ?: document.attrOrNull(YanHH3DSelectors.OG_URL, "content")
-
-        val genresRow = labelledElement(document, YanHH3DLabels.GENRES)
 
         return YanDetail(
             title = document.attrOrNull(YanHH3DSelectors.OG_TITLE, "content")
@@ -58,47 +64,74 @@ class YanHH3DParser(
             posterUrl = document.attrOrNull(YanHH3DSelectors.OG_IMAGE, "content")
                 ?.let(domainResolver::absoluteUrl),
             description = document.attrOrNull(YanHH3DSelectors.OG_DESCRIPTION, "content"),
-            year = labelledValue(document, YanHH3DLabels.YEAR)
+            year = infoValue(document, YanHH3DLabels.YEAR)
                 ?.let { YanHH3DPatterns.YEAR.find(it)?.value?.toIntOrNull() },
-            status = labelledValue(document, YanHH3DLabels.STATUS),
-            genres = parseGenres(genresRow),
-            episodes = parseEpisodes(document),
+            status = infoValue(document, YanHH3DLabels.STATUS),
+            genres = infoItem(document, YanHH3DLabels.GENRES)
+                ?.select("a")
+                ?.map { it.text().trim() }
+                ?.filter(String::isNotEmpty)
+                .orEmpty(),
+            watchUrl = parseWatchUrl(document),
         )
     }
 
     /**
-     * Episodes across every server tab, deduplicated by URL and sorted by episode
-     * number. Entries whose number cannot be read keep their page order at the end.
+     * The play button for the preferred server. The detail page offers one button per
+     * server; only [YanHH3DLabels.PREFERRED_SERVER] is wanted, and the first button is
+     * the fallback if the site ever renames them.
+     */
+    fun parseWatchUrl(document: Document): String? {
+        val buttons = document.select(YanHH3DSelectors.PLAY_BUTTON)
+        val preferred = buttons.firstOrNull {
+            it.text().contains(YanHH3DLabels.PREFERRED_SERVER, ignoreCase = true)
+        } ?: buttons.firstOrNull()
+
+        return preferred?.attr("href")?.trim()
+            ?.takeIf(String::isNotEmpty)
+            ?.let(domainResolver::normalizeInternalData)
+    }
+
+    /**
+     * Episodes from a watch page, taking only the preferred server's tab pane so the
+     * list is not doubled by the other server. Deduplicated by URL and sorted by
+     * episode number; entries whose number cannot be read keep their page order at the
+     * end.
      *
      * URLs are stored path-only, so CloudStream watch history survives a domain change.
      */
     fun parseEpisodes(document: Document): List<YanEpisode> {
-        val container = document.selectFirst(YanHH3DSelectors.DETAIL_CONTAINER) ?: return emptyList()
+        val container = document.selectFirst(YanHH3DSelectors.EPISODE_CONTAINER) ?: return emptyList()
 
-        val tabIds = container.select("a[href^=#]")
+        val tabs = container.select(YanHH3DSelectors.EPISODE_TAB)
+        val preferred = tabs.filter {
+            it.text().contains(YanHH3DLabels.PREFERRED_SERVER, ignoreCase = true)
+        }
+        val paneIds = preferred.ifEmpty { tabs }
             .map { it.attr("href").trim().removePrefix("#") }
             .filter(String::isNotEmpty)
 
         // Without tabs the container itself holds the episode anchors.
-        val anchors = if (tabIds.isEmpty()) {
-            container.select("a[href]")
+        val anchors = if (paneIds.isEmpty()) {
+            container.select(YanHH3DSelectors.EPISODE_LINK)
         } else {
-            tabIds.flatMap { id -> container.select("#$id a[href]") }
+            paneIds.flatMap { id -> container.select("#$id ${YanHH3DSelectors.EPISODE_LINK}") }
         }
 
         return anchors.mapNotNull { anchor ->
             val href = anchor.attr("href").trim()
             if (href.isEmpty() || href.startsWith("#")) return@mapNotNull null
 
-            // The site wraps the label in a div; fall back to the anchor's own text.
-            val name = anchor.selectFirst("div")?.text()?.trim()?.takeIf(String::isNotEmpty)
+            val label = anchor.textOrNull(YanHH3DSelectors.EPISODE_ORDER)
+                ?: anchor.attr("title").trim().takeIf(String::isNotEmpty)
                 ?: anchor.text().trim()
-            if (name.isEmpty()) return@mapNotNull null
+            if (label.isEmpty()) return@mapNotNull null
 
             YanEpisode(
-                name = name,
+                // The site labels episodes with the bare number.
+                name = if (label.all(Char::isDigit)) "Tập $label" else label,
                 url = domainResolver.normalizeInternalData(href),
-                episodeNumber = parseEpisodeNumber(name, href),
+                episodeNumber = parseEpisodeNumber(label, href),
             )
         }
             .distinctBy { it.url }
@@ -106,9 +139,9 @@ class YanHH3DParser(
     }
 
     /**
-     * Playable entries on an episode page. Every `data-src` is returned, including
-     * ones classified [YanSourceType.UNKNOWN], so a maintainer can see what the page
-     * offered instead of wondering why a server vanished.
+     * Playable entries on a watch page. Every `data-src` is returned, including ones
+     * classified [YanSourceType.UNKNOWN], so a maintainer can see what the page offered
+     * instead of wondering why a server vanished.
      */
     fun parseSources(document: Document): List<YanSource> =
         document.select(YanHH3DSelectors.SERVER_LINK).mapNotNull { element ->
@@ -154,42 +187,21 @@ class YanHH3DParser(
             ?: YanHH3DPatterns.EPISODE_NUMBER.find(url.substringAfterLast('/'))
                 ?.groupValues?.get(1)?.toIntOrNull()
 
-    private fun parseGenres(row: Element?): List<String> {
-        if (row == null) return emptyList()
-
-        val linked = row.select("a").map { it.text().trim() }.filter(String::isNotEmpty)
-        if (linked.isNotEmpty()) return linked
-
-        return labelledText(row, YanHH3DLabels.GENRES)
-            ?.split(',', '|')
-            ?.map(String::trim)
-            ?.filter(String::isNotEmpty)
-            .orEmpty()
-    }
-
     /**
-     * The innermost element that carries both [label] and a value. Jsoup returns
-     * matches in document order, so the last element that still yields a value is the
-     * row itself: ancestor blocks come earlier, and the bare `<span>` holding the
-     * label comes later but yields nothing once the label is stripped off.
+     * The metadata row whose label matches, scoped to the info block. The sidebar menu
+     * repeats words like "Thể loại", so searching the whole document would pick up the
+     * site-wide genre menu instead of this title's genres.
      */
-    private fun labelledElement(document: Document, label: String): Element? =
-        document.select(":contains($label)")
-            .lastOrNull { labelledText(it, label) != null }
+    private fun infoItem(document: Document, label: String): Element? =
+        document.selectFirst(YanHH3DSelectors.DETAIL_INFO)
+            ?.select(YanHH3DSelectors.DETAIL_INFO_ITEM)
+            ?.firstOrNull { item ->
+                item.textOrNull(YanHH3DSelectors.DETAIL_INFO_LABEL)
+                    ?.startsWith(label, ignoreCase = true) == true
+            }
 
-    private fun labelledValue(document: Document, label: String): String? =
-        labelledElement(document, label)?.let { labelledText(it, label) }
-
-    private fun labelledText(element: Element, label: String): String? {
-        val text = element.text()
-        val index = text.indexOf(label, ignoreCase = true)
-        if (index < 0) return null
-
-        return text.substring(index + label.length)
-            .trimStart(':', ' ', ' ')
-            .trim()
-            .takeIf(String::isNotEmpty)
-    }
+    private fun infoValue(document: Document, label: String): String? =
+        infoItem(document, label)?.textOrNull(YanHH3DSelectors.DETAIL_INFO_VALUE)
 
     /** First non-blank lazy-load or plain image attribute, in [YanHH3DSelectors.POSTER_ATTRIBUTES] order. */
     private fun posterAttribute(image: Element): String? =
