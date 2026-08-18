@@ -123,6 +123,16 @@ object YanHH3DPatterns {
 
     /** Hosts or paths that mean "this is a player page, hand it to an extractor". */
     val EMBED_HINTS = listOf("abyss", "embed", "player", "short.icu")
+
+    /**
+     * The CDN serves each playlist from `/stream/m3u8/<file>`, not from the path the
+     * page advertises in `data-src`. Playing the advertised URL returns something that
+     * is not a manifest, which the player reports as error 3002
+     * (`ERROR_CODE_PARSING_MANIFEST_MALFORMED`).
+     */
+    val HLS_PATH = Regex("^(https?://[^/]+)/.+/([^/]+\\.m3u8)(\\?.*)?$", RegexOption.IGNORE_CASE)
+
+    const val HLS_STREAM_PATH = "/stream/m3u8/"
 }
 
 /**

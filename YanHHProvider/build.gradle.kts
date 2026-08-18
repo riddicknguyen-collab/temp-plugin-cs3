@@ -6,7 +6,7 @@ dependencies {
 }
 
 // Use an integer for version numbers
-version = 3
+version = 4
 
 cloudstream {
     description = "YanHH3D provider for a private CloudStream repo"

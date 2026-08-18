@@ -154,9 +154,11 @@ class YanHH3DParser(
 
             YanSource(
                 name = name,
-                url = url,
+                // Only playlists get rewritten; embeds must reach their host untouched.
+                url = if (type == YanSourceType.HLS) normalizeHlsUrl(url) else url,
                 type = type,
                 quality = if (type == YanSourceType.HLS) {
+                    // Read the quality off the advertised URL, which still has the path.
                     parseQuality(name, url)
                 } else {
                     YanHH3DQualities.UNKNOWN
@@ -174,6 +176,16 @@ class YanHH3DParser(
             text.contains("480") -> YanHH3DQualities.P480
             else -> YanHH3DQualities.UNKNOWN
         }
+    }
+
+    /**
+     * Moves a playlist URL onto the path the CDN actually serves it from. A URL that
+     * does not match the expected shape is returned untouched rather than mangled.
+     */
+    private fun normalizeHlsUrl(url: String): String {
+        val match = YanHH3DPatterns.HLS_PATH.find(url) ?: return url
+        val (host, file, query) = match.destructured
+        return "$host${YanHH3DPatterns.HLS_STREAM_PATH}$file$query"
     }
 
     private fun classify(url: String): YanSourceType = when {

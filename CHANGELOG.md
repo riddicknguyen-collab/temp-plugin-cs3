@@ -1,5 +1,12 @@
 # Changelog
 
+## v4
+
+- Rewrite playlist URLs onto `/stream/m3u8/<file>`, which is where the CDN actually
+  serves them. The path advertised in `data-src` returns something that is not a
+  manifest, so playback failed with player error 3002
+  (`ERROR_CODE_PARSING_MANIFEST_MALFORMED`). Embed and unknown sources are untouched.
+
 ## v3
 
 Rebuilt the detail and episode parsing against real pages saved from the site. The

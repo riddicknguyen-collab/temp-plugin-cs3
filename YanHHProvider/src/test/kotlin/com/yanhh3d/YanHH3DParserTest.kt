@@ -221,6 +221,27 @@ class YanHH3DParserTest {
     }
 
     @Test
+    fun `parseSources rewrites playlists onto the path the cdn serves`() {
+        val sources = parser.parseSources(fixture("episode.html")).associateBy { it.name }
+
+        // The advertised path is not where the manifest lives; playing it raw fails.
+        assertEquals(
+            "https://scontent-sin2-9-xx.fbcdn.cloud/stream/m3u8/fcea5488.m3u8",
+            sources.getValue("1080").url,
+        )
+        assertEquals(
+            "https://scontent-sin2-9-xx.fbcdn.cloud/stream/m3u8/70444278.m3u8",
+            sources.getValue("4K").url,
+        )
+        // Embeds and unknown entries must reach their host exactly as published.
+        assertEquals("https://short.icu/abyss-nhat-tram-tap-5", sources.getValue("Abyss").url)
+        assertEquals(
+            "https://scontent-sin2-10-xx.fbcdn.cloud/play-fb-v8/play/1386215330321845",
+            sources.getValue("HD").url,
+        )
+    }
+
+    @Test
     fun `parseSources skips blank data-src and deduplicates by url`() {
         val sources = parser.parseSources(fixture("episode.html"))
 
