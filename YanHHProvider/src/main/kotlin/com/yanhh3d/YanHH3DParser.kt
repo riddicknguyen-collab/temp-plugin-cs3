@@ -22,16 +22,18 @@ class YanHH3DParser(
             val href = anchor.attr("href").trim()
             if (href.isEmpty()) return@mapNotNull null
 
-            val title = anchor.attr("title").trim().ifEmpty { anchor.text().trim() }
+            // The card anchor wraps only a play icon, so its text is usually empty and
+            // the title attribute is what carries the name.
+            val title = anchor.attr("title").trim()
+                .ifEmpty { item.textOrNull(YanHH3DSelectors.MOVIE_ITEM_TITLE).orEmpty() }
+                .ifEmpty { anchor.text().trim() }
             if (title.isEmpty()) return@mapNotNull null
 
             YanMovieItem(
                 title = title,
                 url = domainResolver.absoluteUrl(href),
                 posterUrl = item.selectFirst(YanHH3DSelectors.MOVIE_ITEM_POSTER)
-                    ?.attr("src")
-                    ?.trim()
-                    ?.takeIf(String::isNotEmpty)
+                    ?.let(::posterAttribute)
                     ?.let(domainResolver::absoluteUrl),
                 currentEpisode = item.textOrNull(YanHH3DSelectors.MOVIE_ITEM_CURRENT_EPISODE),
                 qualityLabel = item.textOrNull(YanHH3DSelectors.MOVIE_ITEM_QUALITY),
@@ -188,6 +190,12 @@ class YanHH3DParser(
             .trim()
             .takeIf(String::isNotEmpty)
     }
+
+    /** First non-blank lazy-load or plain image attribute, in [YanHH3DSelectors.POSTER_ATTRIBUTES] order. */
+    private fun posterAttribute(image: Element): String? =
+        YanHH3DSelectors.POSTER_ATTRIBUTES.firstNotNullOfOrNull { attribute ->
+            image.attr(attribute).trim().takeIf(String::isNotEmpty)
+        }
 
     private fun Element.textOrNull(selector: String): String? =
         selectFirst(selector)?.text()?.trim()?.takeIf(String::isNotEmpty)

@@ -41,12 +41,20 @@ class YanHH3DProvider : MainAPI() {
 
     override val hasMainPage = true
 
-    // YanHH3D is mostly multi-episode animation, so TvSeries comes first.
-    override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
+    // The site is Chinese donghua, so Anime has to be declared: CloudStream groups
+    // providers by supportedTypes, and without it YanHH3D never shows up under the
+    // animation media filter.
+    override val supportedTypes = setOf(TvType.Anime, TvType.TvSeries, TvType.Movie)
 
     override val mainPage = mainPageOf(*YanHH3DConstants.MAIN_PAGES.toTypedArray())
 
     private val defaultHeaders = mapOf("User-Agent" to YanHH3DConstants.USER_AGENT)
+
+    /** CloudStream fetches posters with its own image loader, which sends none of our headers. */
+    private val posterRequestHeaders = mapOf(
+        "User-Agent" to YanHH3DConstants.USER_AGENT,
+        "Referer" to mainUrl,
+    )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? =
         runCatching {
@@ -99,10 +107,11 @@ class YanHH3DProvider : MainAPI() {
             newTvSeriesLoadResponse(
                 detail.title,
                 detail.url,
-                TvType.TvSeries,
+                TvType.Anime,
                 detail.episodes.map { it.toEpisode() },
             ) {
                 this.posterUrl = detail.posterUrl
+                this.posterHeaders = posterRequestHeaders
                 this.plot = detail.description
                 this.year = detail.year
                 this.tags = detail.genres
@@ -177,8 +186,9 @@ class YanHH3DProvider : MainAPI() {
 
     private fun YanMovieItem.toSearchResponse(): SearchResponse {
         val item = this
-        return newTvSeriesSearchResponse(item.title, item.url, TvType.TvSeries) {
+        return newTvSeriesSearchResponse(item.title, item.url, TvType.Anime) {
             this.posterUrl = item.posterUrl
+            this.posterHeaders = posterRequestHeaders
         }
     }
 

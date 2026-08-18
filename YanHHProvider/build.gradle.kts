@@ -6,7 +6,7 @@ dependencies {
 }
 
 // Use an integer for version numbers
-version = 1
+version = 2
 
 cloudstream {
     description = "YanHH3D provider for a private CloudStream repo"
@@ -21,12 +21,12 @@ cloudstream {
     **/
     status = 1
 
-    tvTypes = listOf("TvSeries", "Movie")
+    tvTypes = listOf("Anime", "TvSeries", "Movie")
 
     requiresResources = false
     language = "vi"
 
-    iconUrl = "https://yanhh3d.love/favicon.ico"
+    iconUrl = "https://yanhh3d.pw/favicon.ico"
 }
 
 android {

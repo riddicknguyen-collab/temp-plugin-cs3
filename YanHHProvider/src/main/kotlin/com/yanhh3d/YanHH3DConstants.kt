@@ -10,13 +10,15 @@ object YanHH3DConstants {
     /** Prefix for every log line this provider writes. */
     const val LOG_TAG = "[YanHH3D]"
 
-    const val DEFAULT_BASE_URL = "https://yanhh3d.love"
+    const val DEFAULT_BASE_URL = "https://yanhh3d.pw"
 
     /**
-     * Hosts YanHH3D has been served from. A URL stored under any of them is remapped
-     * onto the current base URL, so old bookmarks keep working after a domain change.
+     * Hosts YanHH3D has been served from, newest first. A URL stored under any of them
+     * is remapped onto the current base URL, so bookmarks and watch history survive a
+     * domain move. Add the outgoing domain here whenever [DEFAULT_BASE_URL] changes.
      */
     val KNOWN_DOMAINS = listOf(
+        "yanhh3d.pw",
         "yanhh3d.love",
         "yanhh3d.ac",
     )
@@ -49,7 +51,18 @@ object YanHH3DConstants {
 object YanHH3DSelectors {
     const val MOVIE_ITEM = ".flw-item"
     const val MOVIE_ITEM_LINK = "a[href]"
-    const val MOVIE_ITEM_POSTER = "img[src]"
+    const val MOVIE_ITEM_POSTER = "img"
+
+    /**
+     * The card image is lazy-loaded: the real URL sits in `data-src` and the element
+     * carries no `src` at all. Read these in order and take the first non-blank one,
+     * so both the lazy markup and a plain `src` keep working.
+     */
+    val POSTER_ATTRIBUTES = listOf("data-src", "src", "data-original", "data-lazy-src")
+
+    /** The card repeats its title in a heading; used when the anchor has no `title`. */
+    const val MOVIE_ITEM_TITLE = "h4"
+
     const val MOVIE_ITEM_CURRENT_EPISODE = ".tick-rate"
     const val MOVIE_ITEM_QUALITY = ".tick-dub"
 

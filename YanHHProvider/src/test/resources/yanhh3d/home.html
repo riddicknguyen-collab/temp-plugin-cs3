@@ -2,69 +2,74 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <title>Mới cập nhật - YanHH3D</title>
+    <title>YanHH3D | Hoạt Hình Trung Quốc Thuyết Minh</title>
 </head>
 <body>
-<div class="film_list-wrap">
+<div class="swiper-wrapper custom-slide">
 
-    <!-- 1. Ordinary card: relative poster, title attribute, both ticks. -->
-    <div class="flw-item">
+    <!-- 1. Real card shape: lazy-loaded poster in data-src, no src at all, and the
+         anchor holds only a play icon so its text is empty. -->
+    <div class="flw-item swiper-slide">
         <div class="film-poster">
-            <img class="film-poster-img" src="/uploads/poster/dau-pha-thuong-khung.jpg" alt="Đấu Phá Thương Khung">
-            <div class="tick">
-                <div class="tick-rate">Tập 145</div>
-                <div class="tick-dub">1080p</div>
-            </div>
+            <div class="tick tick-rate">154/180 [4K]</div>
+            <div class="tick ltr"><h4>Tiên Nghịch</h4></div>
+            <img data-src="https://yanhh3d.pw/storage/movies/tien-nghich.png" class="film-poster-img lazyload" alt="Tiên Nghịch">
+            <a href="https://yanhh3d.pw/tien-nghich" class="film-poster-ahref" title="Tiên Nghịch" data-id="18632"><i class="fas fa-play"></i></a>
         </div>
-        <div class="film-detail">
-            <h3 class="film-name">
-                <a href="/phim/dau-pha-thuong-khung" title="Đấu Phá Thương Khung">Đấu Phá Thương Khung</a>
-            </h3>
-        </div>
+        <div class="clearfix"></div>
     </div>
 
-    <!-- 2. Card still pointing at the old domain, and no quality tick. -->
-    <div class="flw-item">
+    <!-- 2. Card still on the old domain, link and poster alike. -->
+    <div class="flw-item swiper-slide">
         <div class="film-poster">
-            <img class="film-poster-img" src="https://yanhh3d.ac/uploads/poster/tinh-gioi.jpg" alt="Tinh Giới">
-            <div class="tick">
-                <div class="tick-rate">Tập 20</div>
-            </div>
-        </div>
-        <div class="film-detail">
-            <h3 class="film-name">
-                <a href="https://yanhh3d.ac/phim/tinh-gioi" title="Tinh Giới">Tinh Giới</a>
-            </h3>
+            <div class="tick tick-rate">88/104</div>
+            <div class="tick ltr"><h4>Già Thiên</h4></div>
+            <img data-src="https://yanhh3d.love/storage/movies/gia-thien.png" class="film-poster-img lazyload" alt="Già Thiên">
+            <a href="https://yanhh3d.love/gia-thien" class="film-poster-ahref" title="Già Thiên"><i class="fas fa-play"></i></a>
         </div>
     </div>
 
-    <!-- 3. No poster and no title attribute, so the anchor text has to be used. -->
-    <div class="flw-item">
-        <div class="film-detail">
-            <h3 class="film-name">
-                <a href="/phim/vo-than">Võ Thần</a>
-            </h3>
-        </div>
-    </div>
-
-    <!-- 4. Protocol-relative poster on a CDN host, and an href without a leading slash. -->
-    <div class="flw-item">
+    <!-- 3. No title attribute, so the heading has to be used. -->
+    <div class="flw-item swiper-slide">
         <div class="film-poster">
-            <img class="film-poster-img" src="//cdn.yanhh3d.love/poster/thon-phe-tinh-khong.jpg">
-        </div>
-        <div class="film-detail">
-            <h3 class="film-name">
-                <a href="phim/thon-phe-tinh-khong" title="Thôn Phệ Tinh Không">Thôn Phệ Tinh Không</a>
-            </h3>
+            <div class="tick ltr"><h4>Phàm Nhân Tu Tiên</h4></div>
+            <img data-src="/storage/movies/pham-nhan-tu-tien.png" class="film-poster-img lazyload">
+            <a href="/pham-nhan-tu-tien" class="film-poster-ahref"><i class="fas fa-play"></i></a>
         </div>
     </div>
 
-    <!-- 5. Broken card: empty href. Must be skipped, not crash. -->
-    <div class="flw-item">
-        <div class="film-detail">
-            <h3 class="film-name">
-                <a href="" title="Phim Lỗi">Phim Lỗi</a>
-            </h3>
+    <!-- 4. Older markup that still uses a plain src, plus a quality tick. -->
+    <div class="flw-item swiper-slide">
+        <div class="film-poster">
+            <div class="tick tick-rate">Tập 20</div>
+            <div class="tick tick-dub">1080p</div>
+            <img src="/storage/movies/thon-phe-tinh-khong.png" class="film-poster-img" alt="Thôn Phệ Tinh Không">
+            <a href="thon-phe-tinh-khong" class="film-poster-ahref" title="Thôn Phệ Tinh Không"><i class="fas fa-play"></i></a>
+        </div>
+    </div>
+
+    <!-- 5. No image element at all. Must still yield an item. -->
+    <div class="flw-item swiper-slide">
+        <div class="film-poster">
+            <div class="tick ltr"><h4>Vô Thần</h4></div>
+            <a href="/vo-than" class="film-poster-ahref" title="Vô Thần"><i class="fas fa-play"></i></a>
+        </div>
+    </div>
+
+    <!-- 6. Protocol-relative poster on a CDN host, which is not a YanHH3D domain. -->
+    <div class="flw-item swiper-slide">
+        <div class="film-poster">
+            <div class="tick ltr"><h4>Đấu Phá Thương Khung</h4></div>
+            <img data-src="//cdn.yanhh3d.pw/storage/movies/dau-pha-thuong-khung.png" class="film-poster-img lazyload">
+            <a href="/dau-pha-thuong-khung" class="film-poster-ahref" title="Đấu Phá Thương Khung"><i class="fas fa-play"></i></a>
+        </div>
+    </div>
+
+    <!-- 7. Broken card: empty href. Must be skipped, not crash. -->
+    <div class="flw-item swiper-slide">
+        <div class="film-poster">
+            <div class="tick ltr"><h4>Phim Lỗi</h4></div>
+            <a href="" class="film-poster-ahref" title="Phim Lỗi"><i class="fas fa-play"></i></a>
         </div>
     </div>
 

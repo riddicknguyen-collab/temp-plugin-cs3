@@ -29,69 +29,86 @@ class YanHH3DParserTest {
     fun `parseList skips cards with a blank href`() {
         val items = parser.parseList(fixture("home.html"))
 
-        assertEquals(4, items.size)
+        assertEquals(6, items.size)
         assertTrue(items.none { it.title == "Phim Lỗi" })
     }
 
     @Test
-    fun `parseList maps a full card`() {
+    fun `parseList reads the lazy-loaded poster and the anchor title`() {
         val item = parser.parseList(fixture("home.html")).first()
 
-        assertEquals("Đấu Phá Thương Khung", item.title)
-        assertEquals("https://yanhh3d.love/phim/dau-pha-thuong-khung", item.url)
-        assertEquals("https://yanhh3d.love/uploads/poster/dau-pha-thuong-khung.jpg", item.posterUrl)
-        assertEquals("Tập 145", item.currentEpisode)
-        assertEquals("1080p", item.qualityLabel)
+        assertEquals("Tiên Nghịch", item.title)
+        assertEquals("https://yanhh3d.pw/tien-nghich", item.url)
+        // The image carries no src at all; the real URL is in data-src.
+        assertEquals("https://yanhh3d.pw/storage/movies/tien-nghich.png", item.posterUrl)
+        assertEquals("154/180 [4K]", item.currentEpisode)
+        assertNull(item.qualityLabel)
     }
 
     @Test
     fun `parseList remaps the old domain on both the link and the poster`() {
         val item = parser.parseList(fixture("home.html"))[1]
 
-        assertEquals("https://yanhh3d.love/phim/tinh-gioi", item.url)
-        assertEquals("https://yanhh3d.love/uploads/poster/tinh-gioi.jpg", item.posterUrl)
-        assertNull(item.qualityLabel)
+        assertEquals("https://yanhh3d.pw/gia-thien", item.url)
+        assertEquals("https://yanhh3d.pw/storage/movies/gia-thien.png", item.posterUrl)
     }
 
     @Test
-    fun `parseList falls back to the anchor text and survives a missing poster`() {
+    fun `parseList falls back to the card heading when the anchor has no title`() {
         val item = parser.parseList(fixture("home.html"))[2]
 
-        assertEquals("Võ Thần", item.title)
+        assertEquals("Phàm Nhân Tu Tiên", item.title)
+        assertEquals("https://yanhh3d.pw/pham-nhan-tu-tien", item.url)
+        assertEquals("https://yanhh3d.pw/storage/movies/pham-nhan-tu-tien.png", item.posterUrl)
+    }
+
+    @Test
+    fun `parseList still reads a plain src and a relative href`() {
+        val item = parser.parseList(fixture("home.html"))[3]
+
+        assertEquals("https://yanhh3d.pw/thon-phe-tinh-khong", item.url)
+        assertEquals("https://yanhh3d.pw/storage/movies/thon-phe-tinh-khong.png", item.posterUrl)
+        assertEquals("1080p", item.qualityLabel)
+    }
+
+    @Test
+    fun `parseList survives a card with no image`() {
+        val item = parser.parseList(fixture("home.html"))[4]
+
+        assertEquals("Vô Thần", item.title)
         assertNull(item.posterUrl)
         assertNull(item.currentEpisode)
     }
 
     @Test
-    fun `parseList resolves a protocol-relative poster and a relative href`() {
-        val item = parser.parseList(fixture("home.html"))[3]
+    fun `parseList resolves a protocol-relative poster`() {
+        val item = parser.parseList(fixture("home.html"))[5]
 
-        assertEquals("https://yanhh3d.love/phim/thon-phe-tinh-khong", item.url)
         // A CDN host is not a YanHH3D domain, so only the scheme gets filled in.
-        assertEquals("https://cdn.yanhh3d.love/poster/thon-phe-tinh-khong.jpg", item.posterUrl)
+        assertEquals("https://cdn.yanhh3d.pw/storage/movies/dau-pha-thuong-khung.png", item.posterUrl)
     }
 
     // -------------------------------------------------------------- detail
 
     @Test
     fun `parseDetail prefers canonical over og-url`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.love/phim/khac")
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/khac")
 
-        assertEquals("https://yanhh3d.love/phim/dau-pha-thuong-khung", detail.url)
+        assertEquals("https://yanhh3d.pw/phim/dau-pha-thuong-khung", detail.url)
     }
 
     @Test
     fun `parseDetail reads the open graph metadata`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.love/phim/dau-pha-thuong-khung")
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/dau-pha-thuong-khung")
 
         assertEquals("Đấu Phá Thương Khung", detail.title)
-        assertEquals("https://yanhh3d.love/uploads/poster/dau-pha-thuong-khung.jpg", detail.posterUrl)
+        assertEquals("https://yanhh3d.pw/uploads/poster/dau-pha-thuong-khung.jpg", detail.posterUrl)
         assertTrue(detail.description.orEmpty().startsWith("Tiêu Viêm mất sạch tu vi"))
     }
 
     @Test
     fun `parseDetail reads year status and genres from the visible text`() {
-        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.love/phim/dau-pha-thuong-khung")
+        val detail = parser.parseDetail(fixture("detail.html"), "https://yanhh3d.pw/phim/dau-pha-thuong-khung")
 
         assertEquals(2023, detail.year)
         assertEquals("Đang chiếu", detail.status)
@@ -102,9 +119,9 @@ class YanHH3DParserTest {
     fun `parseDetail falls back to the input url when the page has no canonical`() {
         val document = Jsoup.parse("<html><head></head><body></body></html>", YanHH3DConstants.DEFAULT_BASE_URL)
 
-        val detail = parser.parseDetail(document, "https://yanhh3d.love/phim/khong-metadata")
+        val detail = parser.parseDetail(document, "https://yanhh3d.pw/phim/khong-metadata")
 
-        assertEquals("https://yanhh3d.love/phim/khong-metadata", detail.url)
+        assertEquals("https://yanhh3d.pw/phim/khong-metadata", detail.url)
         assertNull(detail.year)
         assertNull(detail.status)
         assertTrue(detail.genres.isEmpty())
@@ -188,9 +205,9 @@ class YanHH3DParserTest {
 
     @Test
     fun `resolver builds absolute urls from every input shape`() {
-        assertEquals("https://yanhh3d.love/phim/a", resolver.absoluteUrl("/phim/a"))
-        assertEquals("https://yanhh3d.love/phim/a", resolver.absoluteUrl("phim/a"))
-        assertEquals("https://yanhh3d.love/phim/a", resolver.absoluteUrl("https://yanhh3d.ac/phim/a"))
+        assertEquals("https://yanhh3d.pw/phim/a", resolver.absoluteUrl("/phim/a"))
+        assertEquals("https://yanhh3d.pw/phim/a", resolver.absoluteUrl("phim/a"))
+        assertEquals("https://yanhh3d.pw/phim/a", resolver.absoluteUrl("https://yanhh3d.ac/phim/a"))
         assertEquals("https://cdn.example.com/a.jpg", resolver.absoluteUrl("//cdn.example.com/a.jpg"))
         assertEquals("", resolver.absoluteUrl("   "))
     }

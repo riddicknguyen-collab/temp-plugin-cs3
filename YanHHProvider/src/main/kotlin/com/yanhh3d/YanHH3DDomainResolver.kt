@@ -10,7 +10,7 @@ package com.yanhh3d
 class YanHH3DDomainResolver(
     baseUrl: String = YanHH3DConstants.DEFAULT_BASE_URL,
 ) {
-    /** Current base URL without a trailing slash, e.g. `https://yanhh3d.love`. */
+    /** Current base URL without a trailing slash, taken from the constants file. */
     val mainUrl: String = baseUrl.trim().trimEnd('/')
 
     /**
