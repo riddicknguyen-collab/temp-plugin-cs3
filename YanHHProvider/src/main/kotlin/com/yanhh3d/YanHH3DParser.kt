@@ -18,6 +18,10 @@ import org.jsoup.nodes.Element
 class YanHH3DParser(
     private val domainResolver: YanHH3DDomainResolver,
 ) {
+    private companion object {
+        const val BASE64_ALPHABET =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    }
 
     /** Cards on the latest, category and search pages. */
     fun parseList(document: Document): List<YanMovieItem> =
@@ -154,11 +158,9 @@ class YanHH3DParser(
 
             YanSource(
                 name = name,
-                // Only playlists get rewritten; embeds must reach their host untouched.
-                url = if (type == YanSourceType.HLS) normalizeHlsUrl(url) else url,
+                url = url,
                 type = type,
                 quality = if (type == YanSourceType.HLS) {
-                    // Read the quality off the advertised URL, which still has the path.
                     parseQuality(name, url)
                 } else {
                     YanHH3DQualities.UNKNOWN
@@ -179,13 +181,61 @@ class YanHH3DParser(
     }
 
     /**
-     * Moves a playlist URL onto the path the CDN actually serves it from. A URL that
-     * does not match the expected shape is returned untouched rather than mangled.
+     * The real playlist URL from a player page. A source's `data-src` ends in `.m3u8`
+     * but serves this HTML page, which carries its config as base64 JSON in
+     * `data-obf`; the playable manifest is the `pU` entry, carrying a short-lived
+     * token, which is why it has to be read at playback time rather than cached.
+     *
+     * Returns null if the page is not shaped as expected, so the caller can drop the
+     * source instead of handing the player something that will not parse.
      */
-    private fun normalizeHlsUrl(url: String): String {
-        val match = YanHH3DPatterns.HLS_PATH.find(url) ?: return url
-        val (host, file, query) = match.destructured
-        return "$host${YanHH3DPatterns.HLS_STREAM_PATH}$file$query"
+    fun parsePlayerPlaylist(document: Document): String? {
+        val blob = document.selectFirst(YanHH3DSelectors.PLAYER_CONFIG)
+            ?.attr(YanHH3DSelectors.PLAYER_CONFIG_ATTRIBUTE)
+            ?.trim()
+            ?.takeIf(String::isNotEmpty)
+            ?: return null
+
+        val config = decodeBase64(blob) ?: return null
+
+        return YanHH3DPatterns.PLAYER_PLAIN_URL.find(config)
+            ?.groupValues?.get(1)
+            // The blob is JSON, so its slashes arrive escaped.
+            ?.replace("\\/", "/")
+            ?.takeIf(String::isNotEmpty)
+    }
+
+    /**
+     * Decoded by hand rather than with `java.util.Base64`, which needs API 26 while
+     * this module targets 21, or `android.util.Base64`, which would put an Android
+     * class in the parser and break the JVM tests. Accepts the URL-safe alphabet too.
+     */
+    private fun decodeBase64(input: String): String? {
+        val bytes = java.io.ByteArrayOutputStream()
+        var buffer = 0
+        var bits = 0
+
+        for (character in input) {
+            if (character == '=' || character.isWhitespace()) continue
+
+            val value = BASE64_ALPHABET.indexOf(
+                when (character) {
+                    '-' -> '+'
+                    '_' -> '/'
+                    else -> character
+                },
+            )
+            if (value < 0) return null
+
+            buffer = (buffer shl 6) or value
+            bits += 6
+            if (bits >= 8) {
+                bits -= 8
+                bytes.write((buffer shr bits) and 0xFF)
+            }
+        }
+
+        return String(bytes.toByteArray(), Charsets.UTF_8).takeIf(String::isNotEmpty)
     }
 
     private fun classify(url: String): YanSourceType = when {

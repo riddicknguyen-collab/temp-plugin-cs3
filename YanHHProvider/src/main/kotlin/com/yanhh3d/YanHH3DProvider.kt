@@ -151,21 +151,28 @@ class YanHH3DProvider : MainAPI() {
             sources.forEach { source ->
                 when (source.type) {
                     YanSourceType.HLS -> {
-                        log("hls source=${source.name}")
-                        callback(
-                            newExtractorLink(
-                                source = name,
-                                name = "$name ${source.name}",
-                                url = source.url,
-                                type = ExtractorLinkType.M3U8,
-                            ) {
-                                // The CDN rejects requests without these.
-                                this.referer = mainUrl
-                                this.quality = source.quality
-                                this.headers = defaultHeaders
-                            },
-                        )
-                        found = true
+                        // The advertised URL serves a player page, not a manifest; the
+                        // real playlist is inside it and carries a short-lived token.
+                        val playlist = resolvePlaylist(source.url)
+                        if (playlist == null) {
+                            log("hls source unresolved=${source.name}")
+                        } else {
+                            log("hls source=${source.name}")
+                            callback(
+                                newExtractorLink(
+                                    source = name,
+                                    name = "$name ${source.name}",
+                                    url = playlist,
+                                    type = ExtractorLinkType.M3U8,
+                                ) {
+                                    // The CDN rejects requests without these.
+                                    this.referer = mainUrl
+                                    this.quality = source.quality
+                                    this.headers = defaultHeaders
+                                },
+                            )
+                            found = true
+                        }
                     }
 
                     YanSourceType.EMBED -> {
@@ -183,6 +190,14 @@ class YanHH3DProvider : MainAPI() {
             log("loadLinks failed for $data", error)
             false
         }
+
+    /** Fetches a server's player page and reads the playable manifest out of it. */
+    private suspend fun resolvePlaylist(playerUrl: String): String? =
+        runCatching { parser.parsePlayerPlaylist(fetch(playerUrl)) }
+            .getOrElse { error ->
+                log("player page failed for $playerUrl", error)
+                null
+            }
 
     private fun YanEpisode.toEpisode(): Episode {
         val source = this

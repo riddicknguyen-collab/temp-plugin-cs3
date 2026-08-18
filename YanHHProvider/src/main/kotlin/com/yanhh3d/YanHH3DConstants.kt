@@ -90,6 +90,14 @@ object YanHH3DSelectors {
 
     const val SERVER_LINK = "div[class*=list-severs] a[data-src]"
 
+    /**
+     * A server's `data-src` ends in `.m3u8` but serves an HTML player page, whose
+     * config blob holds the real playlist URL. Playing the advertised URL directly
+     * fails with player error 3002 (`ERROR_CODE_PARSING_MANIFEST_MALFORMED`).
+     */
+    const val PLAYER_CONFIG = "#player[data-obf]"
+    const val PLAYER_CONFIG_ATTRIBUTE = "data-obf"
+
     const val CANONICAL = "link[rel=canonical]"
     const val OG_URL = "meta[property=og:url]"
     const val OG_TITLE = "meta[property=og:title]"
@@ -125,14 +133,11 @@ object YanHH3DPatterns {
     val EMBED_HINTS = listOf("abyss", "embed", "player", "short.icu")
 
     /**
-     * The CDN serves each playlist from `/stream/m3u8/<file>`, not from the path the
-     * page advertises in `data-src`. Playing the advertised URL returns something that
-     * is not a manifest, which the player reports as error 3002
-     * (`ERROR_CODE_PARSING_MANIFEST_MALFORMED`).
+     * The plain playlist URL inside the player page's config blob. The blob also
+     * carries an AES-GCM encrypted variant and its key; only the plain one the site
+     * already serves is used.
      */
-    val HLS_PATH = Regex("^(https?://[^/]+)/.+/([^/]+\\.m3u8)(\\?.*)?$", RegexOption.IGNORE_CASE)
-
-    const val HLS_STREAM_PATH = "/stream/m3u8/"
+    val PLAYER_PLAIN_URL = Regex("\"pU\"\\s*:\\s*\"([^\"]+)\"")
 }
 
 /**

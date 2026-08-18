@@ -1,5 +1,25 @@
 # Changelog
 
+## v5
+
+Playback fixed properly, and v4's guess reverted.
+
+A server's `data-src` ends in `.m3u8` but serves an **HTML player page**, which is why
+the player reported error 3002: it was handed markup, not a manifest. The page carries
+its config as base64 JSON in `<div id="player" data-obf="...">`, and the playable
+manifest is the `pU` entry. `loadLinks()` now fetches that page per source and reads
+the manifest out of it. The token in the URL is issued per request, so this has to
+happen at playback time and cannot be cached.
+
+The config also offers an AES-GCM encrypted variant and its key; those are ignored in
+favour of the plain playlist the site already serves.
+
+Reverts v4's `/stream/m3u8/<file>` rewrite, which returned HTTP 500. It came from the
+reference JS implementation and was never verified against the CDN.
+
+Sources whose player page cannot be read are now dropped rather than emitted, so a
+broken entry never reaches the player.
+
 ## v4
 
 - Rewrite playlist URLs onto `/stream/m3u8/<file>`, which is where the CDN actually

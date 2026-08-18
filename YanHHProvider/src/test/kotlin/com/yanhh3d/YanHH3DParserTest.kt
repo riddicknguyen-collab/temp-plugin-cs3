@@ -221,23 +221,36 @@ class YanHH3DParserTest {
     }
 
     @Test
-    fun `parseSources rewrites playlists onto the path the cdn serves`() {
+    fun `parseSources keeps every url exactly as published`() {
         val sources = parser.parseSources(fixture("episode.html")).associateBy { it.name }
 
-        // The advertised path is not where the manifest lives; playing it raw fails.
         assertEquals(
-            "https://scontent-sin2-9-xx.fbcdn.cloud/stream/m3u8/fcea5488.m3u8",
+            "https://scontent-sin2-9-xx.fbcdn.cloud/o2/v/t2/f2/m366/fcea5488.m3u8",
             sources.getValue("1080").url,
         )
-        assertEquals(
-            "https://scontent-sin2-9-xx.fbcdn.cloud/stream/m3u8/70444278.m3u8",
-            sources.getValue("4K").url,
-        )
-        // Embeds and unknown entries must reach their host exactly as published.
         assertEquals("https://short.icu/abyss-nhat-tram-tap-5", sources.getValue("Abyss").url)
+    }
+
+    // -------------------------------------------------------------- player
+
+    @Test
+    fun `parsePlayerPlaylist reads the plain playlist out of the config blob`() {
+        val playlist = parser.parsePlayerPlaylist(fixture("player.html"))
+
         assertEquals(
-            "https://scontent-sin2-10-xx.fbcdn.cloud/play-fb-v8/play/1386215330321845",
-            sources.getValue("HD").url,
+            "https://scontent-sin2-9-xx.fbcdn.cloud/o2/v/t2/f2/m366/" +
+                "fcea5488-32e0-484b-8c62-fdf54edb3971.m3u8/stream-plain?t=88bf081aa57e5ec4.1787057909",
+            playlist,
+        )
+    }
+
+    @Test
+    fun `parsePlayerPlaylist returns null when the page is not a player page`() {
+        assertNull(parser.parsePlayerPlaylist(fixture("episode.html")))
+        assertNull(
+            parser.parsePlayerPlaylist(
+                Jsoup.parse("""<div id="player" data-obf="not base64 %%%"></div>""", YanHH3DConstants.DEFAULT_BASE_URL),
+            ),
         )
     }
 
