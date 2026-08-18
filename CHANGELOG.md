@@ -1,5 +1,17 @@
 # Changelog
 
+## v6
+
+v5 assumed every source is a player page, so anything else was dropped and the app
+reported no links at all.
+
+- Check what a source actually returns instead of assuming. A body starting with
+  `#EXTM3U` is already a playlist and is used as-is; otherwise the player config is
+  read out of it as before.
+- Accept the config blob from any element carrying `data-obf`, not only `#player`.
+- Log the response size when a source page is not recognised, so an unreachable host
+  can be told apart from a page whose shape changed.
+
 ## v5
 
 Playback fixed properly, and v4's guess reverted.

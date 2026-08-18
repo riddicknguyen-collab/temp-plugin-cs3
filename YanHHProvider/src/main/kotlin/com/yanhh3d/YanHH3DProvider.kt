@@ -191,13 +191,22 @@ class YanHH3DProvider : MainAPI() {
             false
         }
 
-    /** Fetches a server's player page and reads the playable manifest out of it. */
-    private suspend fun resolvePlaylist(playerUrl: String): String? =
-        runCatching { parser.parsePlayerPlaylist(fetch(playerUrl)) }
-            .getOrElse { error ->
-                log("player page failed for $playerUrl", error)
-                null
+    /**
+     * Fetches what a server advertises and works out the playable manifest from it.
+     * Logs enough on failure to tell a network error apart from an unrecognised page.
+     */
+    private suspend fun resolvePlaylist(sourceUrl: String): String? =
+        runCatching {
+            val body = app.get(sourceUrl, headers = defaultHeaders, referer = mainUrl).text
+            parser.parsePlaylist(body, sourceUrl).also { resolved ->
+                if (resolved == null) {
+                    log("source page unrecognised, ${body.length} chars, at $sourceUrl")
+                }
             }
+        }.getOrElse { error ->
+            log("source page failed for $sourceUrl", error)
+            null
+        }
 
     private fun YanEpisode.toEpisode(): Episode {
         val source = this

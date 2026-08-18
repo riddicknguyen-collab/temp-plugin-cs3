@@ -233,9 +233,16 @@ class YanHH3DParserTest {
 
     // -------------------------------------------------------------- player
 
+    private fun fixtureText(name: String): String {
+        val stream = checkNotNull(javaClass.getResourceAsStream("/yanhh3d/$name")) {
+            "Missing fixture yanhh3d/$name"
+        }
+        return stream.readBytes().toString(Charsets.UTF_8)
+    }
+
     @Test
-    fun `parsePlayerPlaylist reads the plain playlist out of the config blob`() {
-        val playlist = parser.parsePlayerPlaylist(fixture("player.html"))
+    fun `parsePlaylist reads the plain playlist out of the player config`() {
+        val playlist = parser.parsePlaylist(fixtureText("player.html"), "https://cdn.example/a.m3u8")
 
         assertEquals(
             "https://scontent-sin2-9-xx.fbcdn.cloud/o2/v/t2/f2/m366/" +
@@ -245,11 +252,23 @@ class YanHH3DParserTest {
     }
 
     @Test
-    fun `parsePlayerPlaylist returns null when the page is not a player page`() {
-        assertNull(parser.parsePlayerPlaylist(fixture("episode.html")))
+    fun `parsePlaylist keeps the source url when it already serves a manifest`() {
+        val manifest = "#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:6.0,\nseg-1.ts\n"
+
+        assertEquals(
+            "https://cdn.example/a.m3u8",
+            parser.parsePlaylist(manifest, "https://cdn.example/a.m3u8"),
+        )
+    }
+
+    @Test
+    fun `parsePlaylist returns null when the page is neither shape`() {
+        assertNull(parser.parsePlaylist(fixtureText("episode.html"), "https://cdn.example/a.m3u8"))
+        assertNull(parser.parsePlaylist("", "https://cdn.example/a.m3u8"))
         assertNull(
-            parser.parsePlayerPlaylist(
-                Jsoup.parse("""<div id="player" data-obf="not base64 %%%"></div>""", YanHH3DConstants.DEFAULT_BASE_URL),
+            parser.parsePlaylist(
+                """<div id="player" data-obf="not base64 %%%"></div>""",
+                "https://cdn.example/a.m3u8",
             ),
         )
     }

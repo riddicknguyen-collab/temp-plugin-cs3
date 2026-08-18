@@ -21,6 +21,9 @@ class YanHH3DParser(
     private companion object {
         const val BASE64_ALPHABET =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+        /** First line of every HLS playlist. */
+        const val PLAYLIST_MARKER = "#EXTM3U"
     }
 
     /** Cards on the latest, category and search pages. */
@@ -181,16 +184,23 @@ class YanHH3DParser(
     }
 
     /**
-     * The real playlist URL from a player page. A source's `data-src` ends in `.m3u8`
-     * but serves this HTML page, which carries its config as base64 JSON in
-     * `data-obf`; the playable manifest is the `pU` entry, carrying a short-lived
-     * token, which is why it has to be read at playback time rather than cached.
+     * Works out what a source's `data-src` actually serves and returns a playable
+     * playlist URL, or null if it is neither shape.
      *
-     * Returns null if the page is not shaped as expected, so the caller can drop the
-     * source instead of handing the player something that will not parse.
+     * A `data-src` ends in `.m3u8` but usually serves an HTML player page whose config
+     * is base64 JSON in `data-obf`; the playable manifest is that config's `pU` entry,
+     * and its token is issued per request, so this has to run at playback time. Some
+     * servers may hand back the manifest directly, so [body] is checked for that first
+     * rather than assuming every source is a player page.
      */
-    fun parsePlayerPlaylist(document: Document): String? {
-        val blob = document.selectFirst(YanHH3DSelectors.PLAYER_CONFIG)
+    fun parsePlaylist(body: String, sourceUrl: String): String? {
+        if (body.trimStart().startsWith(PLAYLIST_MARKER)) return sourceUrl
+
+        val document = org.jsoup.Jsoup.parse(body)
+        val blob = (
+            document.selectFirst(YanHH3DSelectors.PLAYER_CONFIG)
+                ?: document.selectFirst("[${YanHH3DSelectors.PLAYER_CONFIG_ATTRIBUTE}]")
+            )
             ?.attr(YanHH3DSelectors.PLAYER_CONFIG_ATTRIBUTE)
             ?.trim()
             ?.takeIf(String::isNotEmpty)
