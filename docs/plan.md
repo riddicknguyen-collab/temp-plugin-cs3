@@ -4,11 +4,37 @@
 
 **Goal:** Implement a private CloudStream 3 Kotlin provider for YanHH3D in the existing CloudStream plugin template repo.
 
-**Current Repo Reality:** The project already contains the CloudStream plugin template, Gradle wrapper, GitHub build workflow, and a working `ExampleProvider` sample module. The target folder `YanHHProvider` exists but is currently empty, so the first real implementation step is turning it into a Gradle module by adding `YanHHProvider/build.gradle.kts`.
+**Repo Reality At Planning Time:** The project already contained the CloudStream plugin template, Gradle wrapper, GitHub build workflow, and a working `ExampleProvider` sample module. The target folder `YanHHProvider` existed but was empty, so the first real implementation step was turning it into a Gradle module by adding `YanHHProvider/build.gradle.kts`. See the Status section below for where things stand now.
 
 **Architecture:** Keep `ExampleProvider` untouched as the reference module. Implement YanHH3D under `YanHHProvider` using focused Kotlin files: plugin entrypoint, provider, pure parser, domain resolver, constants, and models. Parser behavior should be covered by local HTML fixtures before wiring it into provider network calls.
 
 **Tech Stack:** Kotlin, Gradle, Android library plugin, CloudStream 3 extension API, Jsoup, NiceHttp, GitHub Actions.
+
+---
+
+## Status — 2026-08-18
+
+| Phase | Trạng thái |
+| --- | --- |
+| 0 Baseline Review | Done. Máy chưa có JDK/Android SDK nên phải dựng toolchain từ đầu. Template build fail vì stub `cloudstream3:pre-release` đã compile bằng Kotlin 2.4 metadata; đã nâng `kotlin-gradle-plugin` 2.1.0 → 2.4.10. |
+| 1 Create YanHHProvider Module | Done |
+| 2 Constants, Models, Domain Resolver | Done |
+| 3 Parser Fixtures And Tests | Done. Fixtures là HTML tự dựng theo PRD, **chưa** đối chiếu HTML thật của site. |
+| 4 Pure Jsoup Parser | Done. 18 test, 0 fail. |
+| 5 Main Page And Search | Done |
+| 6 Detail Load And Episode Mapping | Done |
+| 7 Video Source Loading | Done, trừ fallback `/stream/m3u8/<file>` — đúng theo plan, chỉ thêm sau khi phát thật chứng minh là cần. |
+| 8 Packaging And Repo Metadata | Done |
+| 9 Manual CloudStream Verification | **Chưa làm** — cần thiết bị Android. Đây là phase duy nhất chứng minh selector còn khớp site đang sống. |
+| 10 Release Workflow | CI chạy xanh, tự publish `.cs3` + `plugins.json` + `repo.json` lên branch `builds`. Bước cài trong app còn chờ repo chuyển sang public, vì `raw.githubusercontent.com` trả 404 cho repo private. |
+
+Ba lệch có chủ ý so với plan:
+
+- `loadLinks()` chỉ tính embed là thành công khi `loadExtractor()` trả `true`, thay vì tính ngay lúc delegate. Trả `true` mà không có link nào sẽ cho người dùng một danh sách nguồn rỗng thay vì báo lỗi.
+- `YanEpisode.url` lưu path-only còn `YanMovieItem.url` lưu absolute. PRD §9.3 chỉ yêu cầu path-only cho dữ liệu episode, là thứ CloudStream lưu vào lịch sử xem.
+- `YanDetail.status` được parse và có test nhưng chưa map vào `LoadResponse`; checklist Phase 6 không liệt kê nó.
+
+Dựng provider tiếp theo thì đọc [adding-a-new-provider.md](adding-a-new-provider.md), không đọc file này.
 
 ---
 
@@ -25,11 +51,11 @@
 - Read: `ExampleProvider/src/main/kotlin/com/example/ExamplePlugin.kt`
 - Read: `ExampleProvider/src/main/kotlin/com/example/ExampleProvider.kt`
 
-- [ ] Run `git status --short`.
-- [ ] Run `rg --files`.
-- [ ] Confirm `ExampleProvider:make` exists with `.\gradlew.bat tasks --all`.
-- [ ] Build the sample with `.\gradlew.bat ExampleProvider:make`.
-- [ ] Do not commit or modify unrelated template files during this phase.
+- [x] Run `git status --short`.
+- [x] Run `rg --files`.
+- [x] Confirm `ExampleProvider:make` exists with `.\gradlew.bat tasks --all`.
+- [x] Build the sample with `.\gradlew.bat ExampleProvider:make`.
+- [x] Do not commit or modify unrelated template files during this phase.
 
 **Done when:** The sample module builds or any template build issue is documented before YanHH3D work starts.
 
@@ -45,8 +71,8 @@
 - Create: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DPlugin.kt`
 - Create: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DProvider.kt`
 
-- [ ] Copy the minimal module shape from `ExampleProvider`.
-- [ ] Create `YanHHProvider/build.gradle.kts` with `version = 1` and CloudStream metadata:
+- [x] Copy the minimal module shape from `ExampleProvider`.
+- [x] Create `YanHHProvider/build.gradle.kts` with `version = 1` and CloudStream metadata:
 
 ```kotlin
 version = 1
@@ -62,11 +88,11 @@ cloudstream {
 }
 ```
 
-- [ ] Create `AndroidManifest.xml` with the same minimal manifest style as the sample.
-- [ ] Create `YanHH3DPlugin.kt` that registers `YanHH3DProvider()`.
-- [ ] Create a minimal `YanHH3DProvider : MainAPI()` with name, lang, `mainUrl`, `hasMainPage`, and supported types.
-- [ ] Run `.\gradlew.bat tasks --all` and confirm `YanHHProvider:make` appears.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Create `AndroidManifest.xml` with the same minimal manifest style as the sample.
+- [x] Create `YanHH3DPlugin.kt` that registers `YanHH3DProvider()`.
+- [x] Create a minimal `YanHH3DProvider : MainAPI()` with name, lang, `mainUrl`, `hasMainPage`, and supported types.
+- [x] Run `.\gradlew.bat tasks --all` and confirm `YanHHProvider:make` appears.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** `YanHHProvider:make` builds an empty provider successfully.
 
@@ -82,16 +108,16 @@ cloudstream {
 - Create: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DDomainResolver.kt`
 - Modify: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DProvider.kt`
 
-- [ ] Add `DEFAULT_BASE_URL = "https://yanhh3d.love"`.
-- [ ] Add known domains: `yanhh3d.love`, `yanhh3d.ac`.
-- [ ] Add desktop Chrome `USER_AGENT`.
-- [ ] Add main pages from the PRD: `/moi-cap-nhat` and the eight `/the-loai/...` categories.
-- [ ] Add selectors: `.flw-item`, `.detail-infor-content`, `div[class*=list-severs] a[data-src]`, canonical and OG meta selectors.
-- [ ] Add internal models: `YanMovieItem`, `YanDetail`, `YanEpisode`, `YanSource`, `YanSourceType`.
-- [ ] Add resolver methods: `absoluteUrl()`, `remapKnownDomain()`, `normalizeInternalData()`.
-- [ ] Update provider `mainUrl` to use the resolver.
-- [ ] Run `rg "yanhh3d\.love|yanhh3d\.ac" YanHHProvider` and verify domain literals only appear in constants and optional metadata.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Add `DEFAULT_BASE_URL = "https://yanhh3d.love"`.
+- [x] Add known domains: `yanhh3d.love`, `yanhh3d.ac`.
+- [x] Add desktop Chrome `USER_AGENT`.
+- [x] Add main pages from the PRD: `/moi-cap-nhat` and the eight `/the-loai/...` categories.
+- [x] Add selectors: `.flw-item`, `.detail-infor-content`, `div[class*=list-severs] a[data-src]`, canonical and OG meta selectors.
+- [x] Add internal models: `YanMovieItem`, `YanDetail`, `YanEpisode`, `YanSource`, `YanSourceType`.
+- [x] Add resolver methods: `absoluteUrl()`, `remapKnownDomain()`, `normalizeInternalData()`.
+- [x] Update provider `mainUrl` to use the resolver.
+- [x] Run `rg "yanhh3d\.love|yanhh3d\.ac" YanHHProvider` and verify domain literals only appear in constants and optional metadata.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** Domain, selectors, headers, categories, and models are isolated from provider logic.
 
@@ -108,11 +134,11 @@ cloudstream {
 - Create: `YanHHProvider/src/test/resources/yanhh3d/episode.html`
 - Modify: `YanHHProvider/build.gradle.kts` if test dependencies are needed
 
-- [ ] Add a home/list fixture with valid `.flw-item` cards, one old-domain URL, one missing poster, and one invalid empty `href`.
-- [ ] Add a detail fixture with canonical URL, OG title/image/description, year/status/genre text, server tabs, duplicate episodes, numeric episodes, and a special episode.
-- [ ] Add an episode fixture with 1080 HLS, 4K HLS, Abyss embed, empty `data-src`, and unknown non-HLS URL.
-- [ ] Add tests for list parsing, detail parsing, episode sorting/deduplication, source classification, and quality detection.
-- [ ] Run `.\gradlew.bat YanHHProvider:test`.
+- [x] Add a home/list fixture with valid `.flw-item` cards, one old-domain URL, one missing poster, and one invalid empty `href`.
+- [x] Add a detail fixture with canonical URL, OG title/image/description, year/status/genre text, server tabs, duplicate episodes, numeric episodes, and a special episode.
+- [x] Add an episode fixture with 1080 HLS, 4K HLS, Abyss embed, empty `data-src`, and unknown non-HLS URL.
+- [x] Add tests for list parsing, detail parsing, episode sorting/deduplication, source classification, and quality detection.
+- [x] Run `.\gradlew.bat YanHHProvider:test`.
 
 **Expected first run:** Tests fail because `YanHH3DParser` is not implemented yet.
 
@@ -128,19 +154,19 @@ cloudstream {
 - Create: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DParser.kt`
 - Modify: `YanHHProvider/src/test/kotlin/com/yanhh3d/YanHH3DParserTest.kt` only if CloudStream test constants differ
 
-- [ ] Implement `parseList(document)` using `.flw-item`.
-- [ ] Skip cards with missing/blank `href`.
-- [ ] Use `a[title]` first and `a.text()` as title fallback.
-- [ ] Normalize relative poster and page URLs through the domain resolver.
-- [ ] Implement `parseDetail(document, inputUrl)` using canonical/OG fallback rules.
-- [ ] Parse year, status, and genres from visible detail text without force unwraps.
-- [ ] Implement `parseEpisodes(document)` using `.detail-infor-content`, server tab IDs, dedupe by URL, and numeric sort.
-- [ ] Do not create duplicate 4K episodes in v1.
-- [ ] Implement `parseSources(document)` using `data-src`.
-- [ ] Classify `.m3u8` as HLS and Abyss/embed/player-like URLs as embed.
-- [ ] Detect quality: 4K/2160, 1080, 720, 480, unknown.
-- [ ] Run `.\gradlew.bat YanHHProvider:test`.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Implement `parseList(document)` using `.flw-item`.
+- [x] Skip cards with missing/blank `href`.
+- [x] Use `a[title]` first and `a.text()` as title fallback.
+- [x] Normalize relative poster and page URLs through the domain resolver.
+- [x] Implement `parseDetail(document, inputUrl)` using canonical/OG fallback rules.
+- [x] Parse year, status, and genres from visible detail text without force unwraps.
+- [x] Implement `parseEpisodes(document)` using `.detail-infor-content`, server tab IDs, dedupe by URL, and numeric sort.
+- [x] Do not create duplicate 4K episodes in v1.
+- [x] Implement `parseSources(document)` using `data-src`.
+- [x] Classify `.m3u8` as HLS and Abyss/embed/player-like URLs as embed.
+- [x] Detect quality: 4K/2160, 1080, 720, 480, unknown.
+- [x] Run `.\gradlew.bat YanHHProvider:test`.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** Parser tests and module build pass.
 
@@ -153,19 +179,19 @@ cloudstream {
 **Files:**
 - Modify: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DProvider.kt`
 
-- [ ] Add `mainPage` entries from `YanHH3DConstants.MAIN_PAGES`.
-- [ ] Implement `getMainPage(page, request)`:
+- [x] Add `mainPage` entries from `YanHH3DConstants.MAIN_PAGES`.
+- [x] Implement `getMainPage(page, request)`:
   - page 1 uses the raw path.
   - page greater than 1 appends `?page=<page>`.
   - network requests use `User-Agent` and `Referer`.
   - list responses reuse `parser.parseList()`.
-- [ ] Implement `search(query)`:
+- [x] Implement `search(query)`:
   - blank query returns `emptyList()`.
   - nonblank query uses `/search?keysearch=<UTF-8 encoded query>`.
   - results reuse `parser.parseList()`.
-- [ ] Map list items to `newTvSeriesSearchResponse`.
-- [ ] Catch failures and return empty results.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Map list items to `newTvSeriesSearchResponse`.
+- [x] Catch failures and return empty results.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** Home, categories, and search compile against the current CloudStream API.
 
@@ -178,15 +204,15 @@ cloudstream {
 **Files:**
 - Modify: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DProvider.kt`
 
-- [ ] Implement `load(url)`.
-- [ ] Resolve path-only and old-domain URLs through `YanHH3DDomainResolver`.
-- [ ] Fetch the detail page with default headers.
-- [ ] Convert `YanDetail` to `newTvSeriesLoadResponse`.
-- [ ] Map `YanEpisode.url` to CloudStream episode `data`.
-- [ ] Map `YanEpisode.name` and `episodeNumber`.
-- [ ] Set poster, plot, year, and tags when present.
-- [ ] Catch failures and return `null`.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Implement `load(url)`.
+- [x] Resolve path-only and old-domain URLs through `YanHH3DDomainResolver`.
+- [x] Fetch the detail page with default headers.
+- [x] Convert `YanDetail` to `newTvSeriesLoadResponse`.
+- [x] Map `YanEpisode.url` to CloudStream episode `data`.
+- [x] Map `YanEpisode.name` and `episodeNumber`.
+- [x] Set poster, plot, year, and tags when present.
+- [x] Catch failures and return `null`.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** Detail load compiles and uses parser output rather than inline selectors.
 
@@ -200,17 +226,17 @@ cloudstream {
 - Modify: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DProvider.kt`
 - Optional Modify: `YanHHProvider/src/main/kotlin/com/yanhh3d/YanHH3DParser.kt`
 
-- [ ] Implement `loadLinks(data, isCasting, subtitleCallback, callback)`.
-- [ ] Resolve the episode URL through the domain resolver.
-- [ ] Fetch the episode page with default headers.
-- [ ] Use `parser.parseSources(document)`.
-- [ ] For every HLS source, emit an `ExtractorLink` or `newExtractorLink` using the current CloudStream API.
-- [ ] Include `Referer` and `User-Agent` headers on every direct HLS link.
-- [ ] For embed sources, call `loadExtractor(source.url, referer, subtitleCallback, callback)`.
-- [ ] Return `true` if at least one HLS is emitted or one embed is delegated.
-- [ ] Return `false` on empty source list or exception.
+- [x] Implement `loadLinks(data, isCasting, subtitleCallback, callback)`.
+- [x] Resolve the episode URL through the domain resolver.
+- [x] Fetch the episode page with default headers.
+- [x] Use `parser.parseSources(document)`.
+- [x] For every HLS source, emit an `ExtractorLink` or `newExtractorLink` using the current CloudStream API.
+- [x] Include `Referer` and `User-Agent` headers on every direct HLS link.
+- [x] For embed sources, call `loadExtractor(source.url, referer, subtitleCallback, callback)`.
+- [x] Return `true` if at least one HLS is emitted or one embed is delegated.
+- [x] Return `false` on empty source list or exception.
 - [ ] Only add `/stream/m3u8/<file>` fallback after real playback proves the original `.m3u8` needs it.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
 
 **Done when:** `loadLinks()` returns all valid sources without throwing.
 
@@ -226,12 +252,12 @@ cloudstream {
 - Generated: `YanHHProvider/build/*.cs3`
 - Generated: `build/plugins.json`
 
-- [ ] Create root `repo.json` with a private `builds` branch plugin list URL.
-- [ ] Replace `OWNER/REPO` before publishing.
-- [ ] Add `CHANGELOG.md` with v1 notes.
-- [ ] Run `.\gradlew.bat YanHHProvider:make`.
-- [ ] Run `.\gradlew.bat makePluginsJson`.
-- [ ] Validate JSON:
+- [x] Create root `repo.json` with a private `builds` branch plugin list URL.
+- [x] Replace `OWNER/REPO` before publishing.
+- [x] Add `CHANGELOG.md` with v1 notes.
+- [x] Run `.\gradlew.bat YanHHProvider:make`.
+- [x] Run `.\gradlew.bat makePluginsJson`.
+- [x] Validate JSON:
 
 ```powershell
 Get-Content -Raw repo.json | ConvertFrom-Json | Out-Null
@@ -274,11 +300,11 @@ Get-Content -Raw build\plugins.json | ConvertFrom-Json | Out-Null
 - `repo.json`
 - Generated artifacts copied by workflow
 
-- [ ] Verify `.github/workflows/build.yml` still matches the repo branch names.
-- [ ] Ensure `builds` branch exists before relying on the workflow checkout step.
-- [ ] Push source to `main`.
-- [ ] Let the workflow run `./gradlew make makePluginsJson`.
-- [ ] Confirm the workflow copies `**/build/*.cs3` and `build/plugins.json` to `builds`.
+- [x] Verify `.github/workflows/build.yml` still matches the repo branch names.
+- [x] Ensure `builds` branch exists before relying on the workflow checkout step.
+- [x] Push source to `main`.
+- [x] Let the workflow run `./gradlew make makePluginsJson`.
+- [x] Confirm the workflow copies `**/build/*.cs3` and `build/plugins.json` to `builds`.
 - [ ] Add this URL to CloudStream:
 
 ```text
@@ -303,13 +329,13 @@ https://raw.githubusercontent.com/OWNER/REPO/builds/repo.json
 
 ## Final Acceptance Checklist
 
-- [ ] `AGENTS.md` reflects the actual repo structure.
-- [ ] `ExampleProvider:make` still builds.
-- [ ] `YanHHProvider:make` builds.
-- [ ] `YanHHProvider` contains plugin, provider, parser, resolver, constants, models, tests, and fixtures.
-- [ ] Domain and selectors are centralized.
-- [ ] Parser tests pass.
-- [ ] Home, categories, search, detail, episodes, HLS, and embed fallback are implemented.
-- [ ] No WebView, CAPTCHA bypass, DRM bypass, login bypass, cookie harvesting, downloading, mirroring, or rehosting is added.
-- [ ] `.cs3`, `plugins.json`, and `repo.json` are generated and valid.
+- [x] `AGENTS.md` reflects the actual repo structure.
+- [x] `ExampleProvider:make` still builds.
+- [x] `YanHHProvider:make` builds.
+- [x] `YanHHProvider` contains plugin, provider, parser, resolver, constants, models, tests, and fixtures.
+- [x] Domain and selectors are centralized.
+- [x] Parser tests pass.
+- [x] Home, categories, search, detail, episodes, HLS, and embed fallback are implemented.
+- [x] No WebView, CAPTCHA bypass, DRM bypass, login bypass, cookie harvesting, downloading, mirroring, or rehosting is added.
+- [x] `.cs3`, `plugins.json`, and `repo.json` are generated and valid.
 - [ ] CloudStream installs the private repo and plays at least one HLS source.

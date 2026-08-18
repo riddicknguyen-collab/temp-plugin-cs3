@@ -34,7 +34,7 @@ Build a private CloudStream 3 Kotlin provider for YanHH3D. The provider should s
 - Preserve `Referer` and `User-Agent` headers for direct HLS links.
 - Prefer small focused Kotlin files over one large provider file.
 
-## Expected YanHHProvider Layout
+## YanHHProvider Layout
 
 ```text
 YanHHProvider/
@@ -50,21 +50,41 @@ YanHHProvider/
   src/test/resources/yanhh3d/*.html
 ```
 
+## Build Prerequisites
+
+- JDK 17 with `JAVA_HOME` set. AGP 8.7.3 requires it; the build fails outright without it.
+- Android SDK with `platform-tools`, `platforms;android-35` and `build-tools;35.0.0`, and `ANDROID_HOME` set.
+- The `cloudstream3:pre-release` stub is a moving tag. When it is rebuilt with a newer Kotlin, `compileDebugKotlin` fails with an incompatible-metadata error and `kotlin-gradle-plugin` in the root `build.gradle.kts` has to be raised to match.
+
+Setup steps are in `docs/adding-a-new-provider.md`.
+
 ## Build And Test Commands
 
 Use Windows commands in this workspace:
 
 ```powershell
 .\gradlew.bat tasks --all
-.\gradlew.bat ExampleProvider:make
+.\gradlew.bat YanHHProvider:test
 .\gradlew.bat YanHHProvider:make
-.\gradlew.bat makePluginsJson
+.\gradlew.bat ExampleProvider:make
+.\gradlew.bat make makePluginsJson
 ```
 
 If `YanHHProvider:make` is not listed, create `YanHHProvider/build.gradle.kts` first. `settings.gradle.kts` will auto-include it after the build file exists.
 
+Unit tests run on the JVM with no CloudStream classes on the runtime classpath. That is why the parser must not import anything from `com.lagradost`, and why quality values live in `YanHH3DQualities` instead of `Qualities`.
+
+## Release
+
+- `main` holds source; the GitHub Actions workflow publishes `.cs3`, `plugins.json` and `repo.json` to the `builds` branch.
+- Adding a provider needs no change to `repo.json`; `plugins.json` is generated from every module.
+- Bump the module `version` whenever selectors, default domain, source extraction, or build output change, otherwise CloudStream will not offer the update.
+- The repository must be public for CloudStream to read the raw URL.
+
 ## Planning Notes
 
-- Main implementation plan lives at `docs/plan.md`.
-- Product requirements live at `docs/YanHH3D_CloudStream_Plugin_PRD.md`.
-- Keep `README.md` as template documentation unless intentionally replacing it with project-specific docs.
+- Step-by-step guide for adding another provider: `docs/adding-a-new-provider.md`.
+- Implementation plan and its per-phase status: `docs/plan.md`.
+- Product requirements: `docs/YanHH3D_CloudStream_Plugin_PRD.md`.
+- Release notes per version: `CHANGELOG.md`.
+- Keep `README.md` as template documentation; project-specific docs live in `docs/`.

@@ -1,6 +1,40 @@
+# CloudStream plugins
+
+Personal CloudStream 3 plugin repository.
+
+| Module | Language | Notes |
+| --- | --- | --- |
+| `YanHHProvider` | vi | YanHH3D provider, v1 |
+| `ExampleProvider` | en | Upstream template sample, kept as a reference |
+
+Add in CloudStream via Settings → Extensions → Add Repository:
+
+```text
+https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/repo.json
+```
+
+| Document | What it covers |
+| --- | --- |
+| [docs/adding-a-new-provider.md](docs/adding-a-new-provider.md) | Copying `YanHHProvider` into a provider for another site, step by step |
+| [AGENTS.md](AGENTS.md) | Architecture rules, build prerequisites, release process |
+| [docs/plan.md](docs/plan.md) | YanHH3D implementation plan and per-phase status |
+| [docs/YanHH3D_CloudStream_Plugin_PRD.md](docs/YanHH3D_CloudStream_Plugin_PRD.md) | Product requirements |
+| [CHANGELOG.md](CHANGELOG.md) | Release notes per version |
+
+Quick build:
+
+```powershell
+.\gradlew.bat YanHHProvider:test
+.\gradlew.bat make makePluginsJson
+```
+
+---
+
+Everything below is the upstream template's own documentation.
+
 **⚠️ This is currently under development, dont use it yet if you're not comfortable with constantly merging new changes**
 
-# `Cloudstream3 Plugin Repo Template`
+## `Cloudstream3 Plugin Repo Template`
 
 Template for a [Cloudstream3](https://github.com/recloudstream) plugin repo
 
