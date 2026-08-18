@@ -17,6 +17,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The last step pushes generated artifacts to the builds branch, which the
+    # default read-only GITHUB_TOKEN cannot do.
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -34,7 +38,7 @@ jobs:
         run: rm -f $GITHUB_WORKSPACE/builds/*.cs3
 
       - name: Setup JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
