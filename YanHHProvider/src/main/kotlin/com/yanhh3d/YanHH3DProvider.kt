@@ -150,31 +150,6 @@ class YanHH3DProvider : MainAPI() {
             var found = false
             sources.forEach { source ->
                 when (source.type) {
-                    YanSourceType.HLS -> {
-                        // The advertised URL serves a player page, not a manifest; the
-                        // real playlist is inside it and carries a short-lived token.
-                        val playlist = resolvePlaylist(source.url)
-                        if (playlist == null) {
-                            log("hls source unresolved=${source.name}")
-                        } else {
-                            log("hls source=${source.name}")
-                            callback(
-                                newExtractorLink(
-                                    source = name,
-                                    name = "$name ${source.name}",
-                                    url = playlist,
-                                    type = ExtractorLinkType.M3U8,
-                                ) {
-                                    // The CDN rejects requests without these.
-                                    this.referer = mainUrl
-                                    this.quality = source.quality
-                                    this.headers = defaultHeaders
-                                },
-                            )
-                            found = true
-                        }
-                    }
-
                     YanSourceType.EMBED -> {
                         log("embed source=${source.name}")
                         if (loadExtractor(source.url, mainUrl, subtitleCallback, callback)) {
@@ -182,7 +157,36 @@ class YanHH3DProvider : MainAPI() {
                         }
                     }
 
-                    YanSourceType.UNKNOWN -> log("unsupported source=${source.url}")
+                    // Everything else is resolved by fetching it: the advertised URL
+                    // says nothing reliable about what the server actually serves.
+                    else -> {
+                        val playback = resolvePlayback(source.url)
+                        if (playback == null) {
+                            log("source unresolved=${source.name}")
+                        } else {
+                            log("${if (playback.isPlaylist) "hls" else "video"} source=${source.name}")
+                            callback(
+                                newExtractorLink(
+                                    source = name,
+                                    name = "$name ${source.name}",
+                                    url = playback.url,
+                                    type = if (playback.isPlaylist) {
+                                        ExtractorLinkType.M3U8
+                                    } else {
+                                        ExtractorLinkType.VIDEO
+                                    },
+                                ) {
+                                    // The CDN rejects requests without these.
+                                    this.referer = mainUrl
+                                    this.quality = source.quality.takeIf {
+                                        it != YanHH3DQualities.UNKNOWN
+                                    } ?: parser.parseQuality(source.name, playback.url)
+                                    this.headers = defaultHeaders
+                                },
+                            )
+                            found = true
+                        }
+                    }
                 }
             }
             found
@@ -195,10 +199,10 @@ class YanHH3DProvider : MainAPI() {
      * Fetches what a server advertises and works out the playable manifest from it.
      * Logs enough on failure to tell a network error apart from an unrecognised page.
      */
-    private suspend fun resolvePlaylist(sourceUrl: String): String? =
+    private suspend fun resolvePlayback(sourceUrl: String): YanPlayback? =
         runCatching {
             val body = app.get(sourceUrl, headers = defaultHeaders, referer = mainUrl).text
-            parser.parsePlaylist(body, sourceUrl).also { resolved ->
+            parser.parsePlayback(body, sourceUrl).also { resolved ->
                 if (resolved == null) {
                     log("source page unrecognised, ${body.length} chars, at $sourceUrl")
                 }

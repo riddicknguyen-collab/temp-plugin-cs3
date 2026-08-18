@@ -45,6 +45,17 @@ data class YanSource(
     val quality: Int,
 )
 
+/**
+ * What a server's page turned out to serve once fetched. The advertised URL says
+ * nothing reliable about this: one ending in `.m3u8` usually returns a player page,
+ * and one that looks like nothing in particular can return a progressive MP4.
+ */
+data class YanPlayback(
+    val url: String,
+    /** True for an HLS playlist, false for a single progressive file. */
+    val isPlaylist: Boolean,
+)
+
 enum class YanSourceType {
     /** Direct .m3u8 playlist; playable once Referer and User-Agent are attached. */
     HLS,

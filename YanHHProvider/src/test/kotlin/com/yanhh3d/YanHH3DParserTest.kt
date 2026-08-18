@@ -241,32 +241,50 @@ class YanHH3DParserTest {
     }
 
     @Test
-    fun `parsePlaylist reads the plain playlist out of the player config`() {
-        val playlist = parser.parsePlaylist(fixtureText("player.html"), "https://cdn.example/a.m3u8")
+    fun `parsePlayback reads the plain playlist out of the player config`() {
+        val playback = parser.parsePlayback(fixtureText("player.html"), "https://cdn.example/a.m3u8")
 
         assertEquals(
             "https://scontent-sin2-9-xx.fbcdn.cloud/o2/v/t2/f2/m366/" +
                 "fcea5488-32e0-484b-8c62-fdf54edb3971.m3u8/stream-plain?t=88bf081aa57e5ec4.1787057909",
-            playlist,
+            playback?.url,
         )
+        assertEquals(true, playback?.isPlaylist)
     }
 
     @Test
-    fun `parsePlaylist keeps the source url when it already serves a manifest`() {
+    fun `parsePlayback keeps the source url when it already serves a manifest`() {
         val manifest = "#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:6.0,\nseg-1.ts\n"
 
-        assertEquals(
-            "https://cdn.example/a.m3u8",
-            parser.parsePlaylist(manifest, "https://cdn.example/a.m3u8"),
-        )
+        val playback = parser.parsePlayback(manifest, "https://cdn.example/a.m3u8")
+
+        assertEquals("https://cdn.example/a.m3u8", playback?.url)
+        assertEquals(true, playback?.isPlaylist)
     }
 
     @Test
-    fun `parsePlaylist returns null when the page is neither shape`() {
-        assertNull(parser.parsePlaylist(fixtureText("episode.html"), "https://cdn.example/a.m3u8"))
-        assertNull(parser.parsePlaylist("", "https://cdn.example/a.m3u8"))
+    fun `parsePlayback picks up a progressive file when the server is not hls`() {
+        val playback = parser.parsePlayback(
+            fixtureText("player-progressive.html"),
+            "https://cdn.example/play-fb-v8/play/123",
+        )
+
+        assertEquals(
+            "https://video-sin6-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQNXunvS4E1xFenxuskelL65.mp4" +
+                "?_nc_cat=109&bitrate=1537189&tag=dash_h264-basic-gen2_720p",
+            playback?.url,
+        )
+        assertEquals(false, playback?.isPlaylist)
+        // The advertised name says only "HD", but the resolved URL still gives a height.
+        assertEquals(YanHH3DQualities.P720, parser.parseQuality("HD", playback!!.url))
+    }
+
+    @Test
+    fun `parsePlayback returns null when the page is neither shape`() {
+        assertNull(parser.parsePlayback(fixtureText("episode.html"), "https://cdn.example/a.m3u8"))
+        assertNull(parser.parsePlayback("", "https://cdn.example/a.m3u8"))
         assertNull(
-            parser.parsePlaylist(
+            parser.parsePlayback(
                 """<div id="player" data-obf="not base64 %%%"></div>""",
                 "https://cdn.example/a.m3u8",
             ),

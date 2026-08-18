@@ -193,9 +193,19 @@ class YanHH3DParser(
      * servers may hand back the manifest directly, so [body] is checked for that first
      * rather than assuming every source is a player page.
      */
-    fun parsePlaylist(body: String, sourceUrl: String): String? {
-        if (body.trimStart().startsWith(PLAYLIST_MARKER)) return sourceUrl
+    fun parsePlayback(body: String, sourceUrl: String): YanPlayback? {
+        // Already a playlist: the server handed back the manifest itself.
+        if (body.trimStart().startsWith(PLAYLIST_MARKER)) return YanPlayback(sourceUrl, true)
 
+        playerConfigPlaylist(body)?.let { return YanPlayback(it, true) }
+
+        // Not an HLS player: some servers set up jwplayer with a single MP4 instead.
+        return YanHH3DPatterns.PROGRESSIVE_FILE.find(body)
+            ?.value
+            ?.let { YanPlayback(it, false) }
+    }
+
+    private fun playerConfigPlaylist(body: String): String? {
         val document = org.jsoup.Jsoup.parse(body)
         val blob = (
             document.selectFirst(YanHH3DSelectors.PLAYER_CONFIG)

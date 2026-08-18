@@ -138,6 +138,12 @@ object YanHH3DPatterns {
      * already serves is used.
      */
     val PLAYER_PLAIN_URL = Regex("\"pU\"\\s*:\\s*\"([^\"]+)\"")
+
+    /**
+     * Some servers are not HLS at all: their page is a jwplayer setup whose source is a
+     * single progressive MP4 held in a script variable.
+     */
+    val PROGRESSIVE_FILE = Regex("https?://[^\"'\\s]+\\.mp4[^\"'\\s]*")
 }
 
 /**

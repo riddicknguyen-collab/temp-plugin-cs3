@@ -1,5 +1,17 @@
 # Changelog
 
+## v7
+
+Offer every server the site does, including the one that is not HLS.
+
+- The "HD" server was dropped because its URL has no `.m3u8` in it. Fetching it shows a
+  jwplayer page whose source is a single progressive MP4, so it is now offered as a
+  direct video link. Classification no longer guesses from the URL shape: every
+  non-embed source is fetched and the body decides whether it is a playlist, a player
+  config, or a progressive file.
+- When a server's label carries no quality ("HD"), the resolved URL is read for one
+  instead, which recovers 720p for that server.
+
 ## v6
 
 v5 assumed every source is a player page, so anything else was dropped and the app
