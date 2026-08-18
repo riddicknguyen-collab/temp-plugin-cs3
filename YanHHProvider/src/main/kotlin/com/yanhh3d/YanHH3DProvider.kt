@@ -152,7 +152,7 @@ class YanHH3DProvider : MainAPI() {
                 when (source.type) {
                     YanSourceType.EMBED -> {
                         log("embed source=${source.name}")
-                        if (loadExtractor(source.url, mainUrl, subtitleCallback, callback)) {
+                        if (loadExtractor(source.url, episodeUrl, subtitleCallback, callback)) {
                             found = true
                         }
                     }
@@ -160,10 +160,11 @@ class YanHH3DProvider : MainAPI() {
                     // Everything else is resolved by fetching it: the advertised URL
                     // says nothing reliable about what the server actually serves.
                     else -> {
-                        val playback = resolvePlayback(source.url)
+                        val playback = resolvePlayback(source.url, episodeUrl)
                         if (playback == null) {
                             log("source unresolved=${source.name}")
                         } else {
+                            val mediaHeaders = hlsHeaders(episodeUrl)
                             log("${if (playback.isPlaylist) "hls" else "video"} source=${source.name}")
                             callback(
                                 newExtractorLink(
@@ -176,12 +177,12 @@ class YanHH3DProvider : MainAPI() {
                                         ExtractorLinkType.VIDEO
                                     },
                                 ) {
-                                    // The CDN rejects requests without these.
-                                    this.referer = mainUrl
+                                    // The CDN rejects requests without the original watch-page context.
+                                    this.referer = episodeUrl
                                     this.quality = source.quality.takeIf {
                                         it != YanHH3DQualities.UNKNOWN
                                     } ?: parser.parseQuality(source.name, playback.url)
-                                    this.headers = defaultHeaders
+                                    this.headers = mediaHeaders
                                 },
                             )
                             found = true
@@ -199,9 +200,9 @@ class YanHH3DProvider : MainAPI() {
      * Fetches what a server advertises and works out the playable manifest from it.
      * Logs enough on failure to tell a network error apart from an unrecognised page.
      */
-    private suspend fun resolvePlayback(sourceUrl: String): YanPlayback? =
+    private suspend fun resolvePlayback(sourceUrl: String, refererUrl: String): YanPlayback? =
         runCatching {
-            val body = app.get(sourceUrl, headers = defaultHeaders, referer = mainUrl).text
+            val body = app.get(sourceUrl, headers = defaultHeaders, referer = refererUrl).text
             parser.parsePlayback(body, sourceUrl).also { resolved ->
                 if (resolved == null) {
                     log("source page unrecognised, ${body.length} chars, at $sourceUrl")
@@ -211,6 +212,12 @@ class YanHH3DProvider : MainAPI() {
             log("source page failed for $sourceUrl", error)
             null
         }
+
+    private fun hlsHeaders(refererUrl: String) = mapOf(
+        "User-Agent" to YanHH3DConstants.USER_AGENT,
+        "Referer" to refererUrl,
+        "Origin" to mainUrl,
+    )
 
     private fun YanEpisode.toEpisode(): Episode {
         val source = this

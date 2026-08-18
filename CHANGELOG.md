@@ -1,5 +1,20 @@
 # Changelog
 
+## v8
+
+Fix playback for the Vietsub `sever2` sources that reached ExoPlayer but came back as
+HTTP status failures (`ERROR_CODE_IO_BAD_HTTP_STATUS`, app error 2004).
+
+- Resolve each `data-src` player page with the episode page as the `Referer` instead of
+  the site root, so the issued stream token stays tied to the same watch-page context
+  the browser uses.
+- Send full HLS request headers on emitted media links: `User-Agent`, `Referer`
+  (episode page), and `Origin` (site root). The previous build only kept
+  `User-Agent` in `headers`, which could let the manifest or segments fail on stricter
+  CDN checks.
+- Pass the episode page as extractor referer too, so non-HLS fallback hosts see the
+  same context.
+
 ## v7
 
 Offer every server the site does, including the one that is not HLS.
