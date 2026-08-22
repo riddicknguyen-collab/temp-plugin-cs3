@@ -10,7 +10,7 @@ object YanHH3DConstants {
     /** Prefix for every log line this provider writes. */
     const val LOG_TAG = "[YanHH3D]"
 
-    const val DEFAULT_BASE_URL = "https://yanhh3d.pw"
+    const val DEFAULT_BASE_URL = "https://yanhh3d.ee"
 
     /**
      * Hosts YanHH3D has been served from, newest first. A URL stored under any of them
@@ -18,6 +18,7 @@ object YanHH3DConstants {
      * domain move. Add the outgoing domain here whenever [DEFAULT_BASE_URL] changes.
      */
     val KNOWN_DOMAINS = listOf(
+        "yanhh3d.ee",
         "yanhh3d.pw",
         "yanhh3d.love",
         "yanhh3d.ac",
