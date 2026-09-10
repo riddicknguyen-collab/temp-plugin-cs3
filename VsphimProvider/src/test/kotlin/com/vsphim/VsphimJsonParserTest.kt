@@ -22,6 +22,10 @@ class VsphimJsonParserTest {
         assertEquals(true, response?.status)
         assertEquals(2, response?.items?.size)
         assertEquals("phim-mau", response?.items?.first()?.slug)
+        assertEquals(
+            "https://nguon.vsphim.com/storage/images/phim-mau/thumb.jpg",
+            response?.items?.first()?.thumb_url,
+        )
         assertEquals(5, response?.pagination?.totalPages)
         assertEquals("20", response?.pagination?.totalItemsPerPage?.asText())
     }
@@ -44,6 +48,14 @@ class VsphimJsonParserTest {
         assertNotNull(movie)
         assertEquals("series", movie?.type)
         assertEquals("Mô tả mẫu", movie?.content)
+        assertEquals(
+            "https://nguon.vsphim.com/storage/images/phim-mau/poster.jpg",
+            movie?.poster_url,
+        )
+        assertEquals(
+            "https://nguon.vsphim.com/storage/images/phim-mau/thumb.jpg",
+            movie?.thumb_url,
+        )
         assertEquals("Thể loại mẫu", movie?.category?.first()?.name)
         assertEquals(2, response?.episodes?.first()?.server_data?.size)
         assertEquals(
@@ -82,5 +94,42 @@ class VsphimJsonParserTest {
     @Test
     fun `returns null for malformed json`() {
         assertNull(parser.parseMovieList(fixture("malformed-response.json")))
+    }
+
+    @Test
+    fun `sorts list by newest modified time with id fallback`() {
+        val response = checkNotNull(parser.parseMovieList(fixture("movie-list.json")))
+        val sorted = response.sortedByModified()
+
+        assertEquals(listOf("phim-mau", ""), sorted.items.map { it.slug })
+    }
+
+    @Test
+    fun `merges detail metadata and image variants into list item`() {
+        val item = VsphimMovieListItem(
+            id = 10,
+            name = "Old title",
+            slug = "old-slug",
+            poster_url = "old-poster.jpg",
+            thumb_url = "old-thumb.jpg",
+            year = 2025,
+        )
+        val detail = VsphimMovieDetail(
+            id = 11,
+            name = "Fresh title",
+            slug = "fresh-slug",
+            poster_url = "fresh-poster.jpg",
+            thumb_url = "fresh-thumb.jpg",
+            year = 2026,
+        )
+
+        val merged = item.withDetails(detail)
+
+        assertEquals(11, merged.id)
+        assertEquals("Fresh title", merged.name)
+        assertEquals("fresh-slug", merged.slug)
+        assertEquals("fresh-poster.jpg", merged.poster_url)
+        assertEquals("fresh-thumb.jpg", merged.thumb_url)
+        assertEquals(2026, merged.year)
     }
 }

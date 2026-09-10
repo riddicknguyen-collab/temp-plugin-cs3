@@ -198,6 +198,8 @@ GET /api/danh-sach/phim-moi-cap-nhat
 
 Mô tả theo trang nguồn: lấy danh sách phim hiển thị trên trang chủ, gồm phim mới nhất/phim hot. Trang không khai báo tham số cho endpoint này. Khi kiểm tra, endpoint trả danh sách rút gọn và phân trang mặc định 24 bản ghi; query `limit=1` không làm thay đổi `totalItemsPerPage` ở response trang chủ.
 
+Provider hiện dùng `/api/danh-sach?limit=20&page=n` cho section “Mới cập nhật” để bảo đảm đúng 20 mục mỗi trang và giữ pagination khi mở toàn bộ nhóm. Endpoint này trả theo `modified` mới nhất ở thời điểm kiểm tra.
+
 Ví dụ:
 
 ```bash
@@ -512,7 +514,7 @@ val response = app.get(
 
 Khi dùng trong CloudStream, nên giữ `Referer` và `User-Agent` theo chính sách của provider nếu API hoặc URL phát yêu cầu; không suy ra URL HLS từ `link_embed` nếu chưa có extractor/endpoint hợp lệ.
 
-## 7. Ghi chú triển khai cho dự án YanHH3D
+## 7. Ghi chú triển khai cho dự án VSPHIM
 
 - API chính có thể dùng làm nguồn dữ liệu JSON thay thế cho các flow home, search, list, detail nếu muốn; list response đã đủ `slug`, poster, title và year.
 - Detail response cung cấp metadata phim và server/tập trong `episodes[].server_data[]`.
@@ -522,6 +524,8 @@ Khi dùng trong CloudStream, nên giữ `Referer` và `User-Agent` theo chính s
 - Parse `totalItemsPerPage` linh hoạt vì có thể là number hoặc string.
 - Với bộ lọc không có kết quả, API đã quan sát thấy response HTTP 200 với `items: []` và `pagination.totalItems: 0`.
 - UI tài liệu ghi “sắp xếp theo nhiều tiêu chí” ở phần giới thiệu, nhưng metadata endpoint `/api/danh-sach` không khai báo tham số sort/order/by. Chỉ dùng các tham số được liệt kê cho endpoint đó cho tới khi xác minh route live.
+- Provider sort lại danh sách theo `modified.time` giảm dần và dùng `_id` giảm dần làm fallback khi timestamp thiếu.
+- `/api/phim/[slug]` là nguồn metadata đầy đủ cho card/detail; `poster_url` là poster dọc và `thumb_url` là ảnh thumb/background.
 
 ## 8. Nguồn và lịch sử kiểm tra
 

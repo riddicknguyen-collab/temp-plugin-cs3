@@ -4,7 +4,8 @@ Personal CloudStream 3 plugin repository.
 
 | Module | Language | Notes |
 | --- | --- | --- |
-| `YanHHProvider` | vi | YanHH3D provider, v1 |
+| `VsphimProvider` | vi | VSPHIM JSON API provider, v5 |
+| `YanHHProvider` | vi | YanHH3D provider |
 | `ExampleProvider` | en | Upstream template sample, kept as a reference |
 
 Add in CloudStream via Settings → Extensions → Add Repository:
@@ -16,6 +17,8 @@ https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3/repo.json
 | Document | What it covers |
 | --- | --- |
 | [docs/adding-a-new-provider.md](docs/adding-a-new-provider.md) | Copying `YanHHProvider` into a provider for another site, step by step |
+| [docs/plan-vsphim-provider.md](docs/plan-vsphim-provider.md) | VSPHIM implementation scope, homepage sections, API mapping and status |
+| [docs/tham-khao/vsphim-api-reference.md](docs/tham-khao/vsphim-api-reference.md) | VSPHIM public API snapshot and response contract |
 | [AGENTS.md](AGENTS.md) | Architecture rules, build prerequisites, release process |
 | [docs/plan.md](docs/plan.md) | YanHH3D implementation plan and per-phase status |
 | [docs/YanHH3D_CloudStream_Plugin_PRD.md](docs/YanHH3D_CloudStream_Plugin_PRD.md) | Product requirements |
@@ -25,6 +28,7 @@ Quick build:
 
 ```powershell
 .\gradlew.bat YanHHProvider:test
+.\gradlew.bat VsphimProvider:test
 .\gradlew.bat make makePluginsJson
 ```
 

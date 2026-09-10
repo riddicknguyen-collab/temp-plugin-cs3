@@ -1,6 +1,7 @@
 package com.vsphim
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class VsphimDomainResolverTest {
@@ -31,5 +32,11 @@ class VsphimDomainResolverTest {
             "https://nguon.vsphim.com/api/danh-sach?type=series",
             resolver.absoluteUrl("/api/danh-sach?type=series"),
         )
+    }
+
+    @Test
+    fun `homepage is split into twenty item paginated sections`() {
+        assertEquals(7, VsphimConstants.MAIN_PAGES.size)
+        assertTrue(VsphimConstants.MAIN_PAGES.all { it.first.contains("limit=20") })
     }
 }

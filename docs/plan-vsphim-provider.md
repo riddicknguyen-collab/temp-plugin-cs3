@@ -1,14 +1,17 @@
-# VsphimProvider — kế hoạch triển khai và trạng thái
+# VsphimProvider — kế hoạch triển khai và trạng thái (v5)
 
 ## Mục tiêu
 
 Tạo provider CloudStream 3 Kotlin độc lập cho VSPHIM, dùng public JSON API tại
 `https://nguon.vsphim.com/api`, giữ nguyên `YanHHProvider` và không phụ thuộc các route MacCMS đang trả 404.
+Homepage dùng các nhóm lọc ổn định, mỗi nhóm hiển thị 20 phim mới cập nhật và mở được toàn bộ danh sách qua phân trang.
 
-## Phạm vi v1
+## Phạm vi hiện tại
 
 - Module riêng: `VsphimProvider`.
-- Trang chủ, các nhóm lọc ổn định, phân trang và tìm kiếm.
+- Trang chủ gồm các nhóm `Mới cập nhật`, `Phim lẻ`, `Phim bộ`, `Hoạt hình`, `TV Shows`, `Đang cập nhật` và `Hoàn thành`.
+- Mỗi nhóm gọi `/api/danh-sach` với `limit=20`, sắp xếp `modified` giảm dần và giữ pagination khi người dùng mở nhóm.
+- Dùng `/api/phim/{slug}` để làm giàu title, năm, poster, thumb và metadata trước khi tạo card; detail được cache trong phiên provider.
 - Chi tiết phim, movie/series mapping và episode từ `episodes[].server_data[]`.
 - Đọc trang player trong `link_embed`, lấy playlist HLS `master.m3u8` và truyền
   `Referer`/`User-Agent`/`Origin` cho CloudStream; vẫn fallback sang extractor nếu
@@ -19,8 +22,8 @@ Tạo provider CloudStream 3 Kotlin độc lập cho VSPHIM, dùng public JSON A
 
 ## Endpoint sử dụng
 
-- `/api/danh-sach/phim-moi-cap-nhat?page=n`
-- `/api/danh-sach` với `type` và `status` cho các section.
+- `/api/danh-sach?limit=20&page=n` cho section mới cập nhật.
+- `/api/danh-sach` với `limit=20`, `type` và `status` cho các section homepage.
 - `/api/tim-kiem?keyword=...&limit=24&page=1`
 - `/api/phim/{slug}`
 - Các catalog `/api/the-loai`, `/api/quoc-gia`, `/api/nam`, `/api/code` được model hóa để mở rộng sau.
@@ -31,8 +34,12 @@ Tạo provider CloudStream 3 Kotlin độc lập cho VSPHIM, dùng public JSON A
 - `series`, `tvshows`, `hoathinh` → `newTvSeriesLoadResponse`.
 - Nhiều server được flatten thành các episode có tên `<server> — <episode>` và dedupe theo embed URL.
 - Search response dùng URL API detail `/api/phim/{slug}`; `load()` gọi trực tiếp API detail.
+- `poster_url` được dùng làm poster; `thumb_url` được dùng làm `backgroundPosterUrl`, với fallback giữa hai trường.
 - `loadLinks()` tải player page, parse playlist HLS trực tiếp; embed host không nhận
   diện được mới chuyển cho `loadExtractor()`.
+
+Các nhóm homepage dùng bộ lọc `type/status` ổn định của API. Không dùng toàn bộ `/api/the-loai` để dựng section động vì
+response live hiện chứa lượng lớn tag không phù hợp làm nhóm điều hướng.
 
 ## Kiểm thử và phát hành
 
@@ -53,6 +60,8 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - [x] Tạo module/plugin metadata.
 - [x] Tạo models, JSON parser, resolver và API client.
 - [x] Implement CloudStream browse/search/detail/loadLinks và VSPHIM player playback.
+- [x] Thêm homepage sections giới hạn 20 phim, sort theo `modified` và phân trang toàn bộ từng nhóm.
+- [x] Làm giàu card bằng `/api/phim/{slug}`, map đầy đủ poster/thumb và thêm fallback ảnh.
 - [x] Viết unit tests và fixtures.
 - [x] Build `.cs3`, `plugins.json` và kiểm tra manifest/package.
 - [ ] Manual verification trên CloudStream/ADB (SDK có `platform-tools\adb.exe`, nhưng hiện không có device/emulator kết nối).
@@ -63,5 +72,6 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - `VsphimProvider:make`: pass; sinh `VsphimProvider/build/VsphimProvider.cs3`.
 - Manifest package xác nhận `com.vsphim.VsphimPlugin`.
 - `makePluginsJson`: pass; manifest gồm `VsphimProvider`, `YanHHProvider` và `ExampleProvider`.
+- VSPHIM v5: homepage gọi danh sách giới hạn 20, gọi detail `/api/phim/{slug}` để cập nhật card và dùng thumb làm background poster.
 - Regression `YanHHProvider:test` hiện có 8 test fail do baseline đã kỳ vọng domain `yanhh3d.pw` trong khi constants hiện dùng `yanhh3d.ee`; không phát sinh từ module VSPHIM và không sửa theo phạm vi goal.
 - Manual install/playback chưa thực hiện được vì chưa có device/emulator kết nối; `adb.exe` tồn tại tại Android SDK nhưng chưa nằm trong PATH.

@@ -1,10 +1,21 @@
 # Changelog
 
+## VSPHIM v5
+
+- Group the homepage into paginated category sections with 20 newest movies per section.
+- Refresh homepage cards from `/api/phim/{slug}` so metadata, poster and thumb stay current.
+- Map `thumb_url` to the detail background poster and fall back between poster and thumb when needed.
+
 ## VSPHIM v4
 
 - Resolve `link_embed` player pages to the VSPHIM `master.m3u8` playlist.
 - Preserve player context headers so CloudStream can load the manifest and segments.
-- Keep the repository manifest on one stable jsDelivr `@builds` URL without a version query.
+- Keep the repository manifest on one stable jsDelivr `@builds` URL.
+
+## Repository cache fix
+
+- Purge the jsDelivr repository, plugin-list, and `.cs3` paths after every publish
+  so CloudStream receives matching plugin metadata and artifacts.
 
 ## VSPHIM v3
 

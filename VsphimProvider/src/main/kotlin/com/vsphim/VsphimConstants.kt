@@ -20,18 +20,24 @@ object VsphimConstants {
 
     const val PAGE_PARAM = "page"
     const val LIMIT_PARAM = "limit"
+    const val HOME_PAGE_LIMIT = 20
     const val KEYWORD_PARAM = "keyword"
     const val TYPE_PARAM = "type"
     const val STATUS_PARAM = "status"
 
+    /**
+     * Each entry is a real API query, so CloudStream can request page 2, 3, ...
+     * when the user opens a section. The API's default ordering is modified
+     * descending; the provider also applies the same ordering defensively.
+     */
     val MAIN_PAGES = listOf(
-        LATEST_PATH to "Mới cập nhật",
-        "$LIST_PATH?type=single" to "Phim lẻ",
-        "$LIST_PATH?type=series" to "Phim bộ",
-        "$LIST_PATH?type=hoathinh" to "Hoạt hình",
-        "$LIST_PATH?type=tvshows" to "TV Shows",
-        "$LIST_PATH?status=ongoing" to "Đang cập nhật",
-        "$LIST_PATH?status=completed" to "Hoàn thành",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Mới cập nhật",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=single" to "Phim lẻ",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=series" to "Phim bộ",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=hoathinh" to "Hoạt hình",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=tvshows" to "TV Shows",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&status=ongoing" to "Đang cập nhật",
+        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&status=completed" to "Hoàn thành",
     )
 
     val KNOWN_DOMAINS = setOf("nguon.vsphim.com")

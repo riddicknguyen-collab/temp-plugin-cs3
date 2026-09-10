@@ -20,9 +20,12 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import java.util.concurrent.ConcurrentHashMap
+
 class VsphimProvider : MainAPI() {
     private val resolver = VsphimDomainResolver()
     private val api = VsphimApiClient(resolver)
+    private val detailCache = ConcurrentHashMap<String, VsphimMovieDetail>()
 
     override var mainUrl = resolver.mainUrl
     override var name = VsphimConstants.PROVIDER_NAME
@@ -38,8 +41,10 @@ class VsphimProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? =
         runCatching {
-            val response = api.getMainPage(request.data, page) ?: return null
-            val items = response.items.mapNotNull { it.toSearchResponse() }
+            val response = api.getMainPage(request.data, page)?.sortedByModified() ?: return null
+            val items = response.items
+                .take(VsphimConstants.HOME_PAGE_LIMIT)
+                .toSearchResponsesWithDetails()
             newHomePageResponse(request, items, response.hasNext(page))
         }.getOrElse { error ->
             log("getMainPage failed for ${request.data}", error)
@@ -68,7 +73,8 @@ class VsphimProvider : MainAPI() {
             if (movie.type.equals("single", ignoreCase = true)) {
                 val source = playable.firstOrNull() ?: return null
                 newMovieLoadResponse(title, detailUrl, TvType.Movie, source.url) {
-                    posterUrl = movie.poster_url?.let(resolver::absoluteUrl)
+                    posterUrl = movie.posterUrl(resolver)
+                    backgroundPosterUrl = movie.thumbUrl(resolver)
                     posterHeaders = this@VsphimProvider.posterHeaders
                     plot = movie.content
                     year = movie.year
@@ -86,7 +92,8 @@ class VsphimProvider : MainAPI() {
                         }
                     },
                 ) {
-                    posterUrl = movie.poster_url?.let(resolver::absoluteUrl)
+                    posterUrl = movie.posterUrl(resolver)
+                    backgroundPosterUrl = movie.thumbUrl(resolver)
                     posterHeaders = this@VsphimProvider.posterHeaders
                     plot = movie.content
                     year = movie.year
@@ -152,10 +159,36 @@ class VsphimProvider : MainAPI() {
             resolver.absoluteUrl("${VsphimConstants.MOVIE_PATH}/$slug"),
             TvType.Movie,
         ) {
-            posterUrl = poster_url?.let(resolver::absoluteUrl)
+            posterUrl = (poster_url.nonBlankOr(thumb_url))
+                ?.let(resolver::absoluteUrl)
             posterHeaders = this@VsphimProvider.posterHeaders
         }
     }
+
+    private suspend fun List<VsphimMovieListItem>.toSearchResponsesWithDetails(): List<SearchResponse> {
+        val responses = ArrayList<SearchResponse>(size)
+        for (item in this) {
+            val slug = item.slug?.trim().orEmpty()
+            val details = if (slug.isEmpty()) null else getMovieDetails(slug)
+            item.withDetails(details).toSearchResponse()?.let(responses::add)
+        }
+        return responses
+    }
+
+    private suspend fun getMovieDetails(slug: String): VsphimMovieDetail? {
+        detailCache[slug]?.let { return it }
+        val detail = api.getMovie(slug)?.movie ?: return null
+        detailCache.putIfAbsent(slug, detail)
+        return detail
+    }
+
+    private fun VsphimMovieDetail.posterUrl(resolver: VsphimDomainResolver): String? =
+        poster_url.nonBlankOr(thumb_url)
+            ?.let(resolver::absoluteUrl)
+
+    private fun VsphimMovieDetail.thumbUrl(resolver: VsphimDomainResolver): String? =
+        thumb_url.nonBlankOr(poster_url)
+            ?.let(resolver::absoluteUrl)
 
     private fun VsphimPagination.hasNext(page: Int): Boolean =
         maxOf(currentPage, page) < totalPages

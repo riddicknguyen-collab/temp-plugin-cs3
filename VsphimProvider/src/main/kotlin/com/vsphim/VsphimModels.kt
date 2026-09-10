@@ -67,6 +67,8 @@ data class VsphimMovieDetailResponse(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VsphimMovieDetail(
     @JsonProperty("_id") val id: Int? = null,
+    val created: VsphimTimestamp? = null,
+    val modified: VsphimTimestamp? = null,
     val name: String? = null,
     val origin_name: String? = null,
     val slug: String? = null,
