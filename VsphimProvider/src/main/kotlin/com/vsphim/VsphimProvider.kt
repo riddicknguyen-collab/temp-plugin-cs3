@@ -25,7 +25,7 @@ class VsphimProvider : MainAPI() {
     override var name = VsphimConstants.PROVIDER_NAME
     override var lang = "vi"
     override val hasMainPage = true
-    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
+    override val supportedTypes = setOf(TvType.NSFW, TvType.Movie, TvType.TvSeries)
     override val mainPage = mainPageOf(*VsphimConstants.MAIN_PAGES.toTypedArray())
 
     private val posterHeaders = mapOf(

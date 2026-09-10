@@ -1,5 +1,9 @@
 # Changelog
 
+## VSPHIM v3
+
+- Declared `TvType.NSFW` in the runtime provider types so CloudStream can show VSPHIM in the NSFW source category.
+
 ## VSPHIM v2
 
 - Marked the provider metadata as `NSFW` for CloudStream's adult-content filtering.
