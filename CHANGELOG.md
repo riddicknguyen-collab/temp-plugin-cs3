@@ -3,6 +3,7 @@
 ## VSPHIM v2
 
 - Marked the provider metadata as `NSFW` for CloudStream's adult-content filtering.
+- Published repository metadata and plugin binaries through jsDelivr as a CDN fallback for GitHub connectivity issues.
 
 ## VSPHIM v1
 

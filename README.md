@@ -10,7 +10,7 @@ Personal CloudStream 3 plugin repository.
 Add in CloudStream via Settings → Extensions → Add Repository:
 
 ```text
-https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/repo.json
+https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3@builds/repo.json
 ```
 
 | Document | What it covers |

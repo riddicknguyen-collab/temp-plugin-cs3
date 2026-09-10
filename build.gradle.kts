@@ -31,6 +31,20 @@ fun Project.cloudstream(configuration: CloudstreamExtension.() -> Unit) = extens
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
 
+// Publish plugin artifact URLs through jsDelivr so CloudStream devices that
+// cannot reach raw.githubusercontent.com can still download the repository.
+tasks.matching { it.name == "makePluginsJson" }.configureEach {
+    doLast {
+        val repository = System.getenv("GITHUB_REPOSITORY") ?: "user/repo"
+        val rawPrefix = "https://raw.githubusercontent.com/$repository/builds/"
+        val cdnPrefix = "https://cdn.jsdelivr.net/gh/$repository@builds/"
+        val pluginsFile = layout.buildDirectory.file("plugins.json").get().asFile
+        if (pluginsFile.isFile) {
+            pluginsFile.writeText(pluginsFile.readText().replace(rawPrefix, cdnPrefix))
+        }
+    }
+}
+
 subprojects {
     apply(plugin = "com.android.library")
     apply(plugin = "kotlin-android")

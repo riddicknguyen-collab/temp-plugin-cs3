@@ -275,10 +275,10 @@ Quy trình:
 URL cần dán vào CloudStream (Settings → Extensions → Add Repository):
 
 ```text
-https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/repo.json
+https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3@builds/repo.json
 ```
 
-**Repo phải là public.** `raw.githubusercontent.com` trả 404 cho repo private khi không có token, và CloudStream không gửi token.
+**Repo phải là public.** jsDelivr đọc nội dung từ GitHub mà không có token, nên không dùng được với repository private.
 
 Tăng `version` khi: đổi selector, đổi domain mặc định, đổi cách trích nguồn, hoặc đổi output build. Không tăng thì CloudStream không biết có bản mới.
 
