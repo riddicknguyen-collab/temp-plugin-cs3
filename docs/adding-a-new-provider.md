@@ -275,7 +275,7 @@ Quy trình:
 URL cần dán vào CloudStream (Settings → Extensions → Add Repository):
 
 ```text
-https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3@builds/repo.json
+https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3/repo.json
 ```
 
 **Repo phải là public.** jsDelivr đọc nội dung từ GitHub mà không có token, nên không dùng được với repository private.
