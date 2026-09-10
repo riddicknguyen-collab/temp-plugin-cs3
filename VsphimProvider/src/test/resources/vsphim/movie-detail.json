@@ -1,0 +1,68 @@
+{
+  "status": true,
+  "msg": "",
+  "movie": {
+    "created": { "time": "2025-11-14T05:16:09+07:00" },
+    "modified": { "time": "2025-11-14T05:16:09+07:00" },
+    "_id": 26415,
+    "name": "Phim mẫu",
+    "origin_name": "Sample Movie",
+    "slug": "phim-mau",
+    "content": "Mô tả mẫu",
+    "type": "series",
+    "status": "completed",
+    "poster_url": "https://nguon.vsphim.com/storage/images/phim-mau/poster.jpg",
+    "thumb_url": "https://nguon.vsphim.com/storage/images/phim-mau/thumb.jpg",
+    "is_copyright": false,
+    "trailer_url": null,
+    "time": "1:01:07",
+    "episode_current": "Full",
+    "episode_total": "Full",
+    "quality": "HD",
+    "lang": "NoSub",
+    "notify": null,
+    "showtimes": null,
+    "year": 2025,
+    "view": 42,
+    "chieurap": false,
+    "sub_docquyen": false,
+    "actor": ["Updating"],
+    "director": [],
+    "category": [
+      { "id": 430, "name": "Thể loại mẫu", "slug": "the-loai-mau" }
+    ],
+    "country": [
+      { "id": 14, "name": "Quốc gia mẫu", "slug": "quoc-gia-mau" }
+    ]
+  },
+  "episodes": [
+    {
+      "server_name": "VIP",
+      "server_data": [
+        {
+          "name": "Tập 2",
+          "slug": "tap-2",
+          "filename": "Tập 2",
+          "link_embed": "https://embed2.vsphim.com/embed/sample-2"
+        },
+        {
+          "name": "Tập 1",
+          "slug": "tap-1",
+          "filename": "Tập 1",
+          "link_embed": "https://embed2.vsphim.com/embed/sample-1"
+        }
+      ]
+    },
+    {
+      "server_name": "VIP",
+      "server_data": [
+        {
+          "name": "Tập 1",
+          "slug": "tap-1",
+          "filename": "Tập 1",
+          "link_embed": "https://embed2.vsphim.com/embed/sample-1"
+        }
+      ]
+    }
+  ]
+}

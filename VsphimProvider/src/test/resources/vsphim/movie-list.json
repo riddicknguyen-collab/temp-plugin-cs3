@@ -1,0 +1,26 @@
+{
+  "status": true,
+  "items": [
+    {
+      "modified": { "time": "2026-08-04T00:40:56+07:00" },
+      "_id": 48951,
+      "name": "Phim mẫu",
+      "origin_name": "Sample Movie",
+      "slug": "phim-mau",
+      "poster_url": "https://nguon.vsphim.com/storage/images/phim-mau/poster.jpg",
+      "thumb_url": "https://nguon.vsphim.com/storage/images/phim-mau/thumb.jpg",
+      "year": 2026
+    },
+    {
+      "_id": 48952,
+      "name": "Không có slug",
+      "slug": ""
+    }
+  ],
+  "pagination": {
+    "totalItems": 100,
+    "totalItemsPerPage": "20",
+    "currentPage": 2,
+    "totalPages": 5
+  }
+}

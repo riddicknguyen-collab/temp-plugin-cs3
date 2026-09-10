@@ -1,0 +1,10 @@
+{
+  "status": true,
+  "items": [],
+  "pagination": {
+    "totalItems": 0,
+    "totalItemsPerPage": 24,
+    "currentPage": 1,
+    "totalPages": 1
+  }
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## VSPHIM v1
+
+- Added a standalone `VsphimProvider` using the public VSPHIM JSON API.
+- Added latest/filter sections, pagination, search, movie/series detail mapping and embed episode playback through CloudStream extractors.
+- Added JSON fixtures and JVM tests for API models, flexible pagination, episode deduplication and domain handling.
+
 ## v8
 
 Fix playback for the Vietsub `sever2` sources that reached ExoPlayer but came back as

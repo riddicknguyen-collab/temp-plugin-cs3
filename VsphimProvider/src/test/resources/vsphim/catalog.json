@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "message": "",
+  "data": {
+    "items": [
+      { "_id": 14, "name": "Quốc gia mẫu", "slug": "quoc-gia-mau" },
+      { "_id": "2026", "name": "2026", "slug": "2026" }
+    ]
+  }
+}
