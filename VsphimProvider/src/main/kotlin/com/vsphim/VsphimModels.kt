@@ -18,6 +18,7 @@ data class VsphimMovieListItem(
     val name: String? = null,
     val origin_name: String? = null,
     val slug: String? = null,
+    val type: String? = null,
     val poster_url: String? = null,
     val thumb_url: String? = null,
     val year: Int? = null,
@@ -61,7 +62,7 @@ data class VsphimMovieDetailResponse(
     val status: Boolean = false,
     val msg: String? = null,
     val movie: VsphimMovieDetail? = null,
-    val episodes: List<VsphimEpisodeServer> = emptyList(),
+    val episodes: List<VsphimEpisodeServer>? = emptyList(),
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -90,10 +91,10 @@ data class VsphimMovieDetail(
     val view: Int? = null,
     val chieurap: Boolean? = null,
     val sub_docquyen: Boolean? = null,
-    val actor: List<String> = emptyList(),
-    val director: List<String> = emptyList(),
-    val category: List<VsphimTaxonomy> = emptyList(),
-    val country: List<VsphimTaxonomy> = emptyList(),
+    val actor: List<String>? = emptyList(),
+    val director: List<String>? = emptyList(),
+    val category: List<VsphimTaxonomy>? = emptyList(),
+    val country: List<VsphimTaxonomy>? = emptyList(),
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -106,7 +107,7 @@ data class VsphimTaxonomy(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VsphimEpisodeServer(
     val server_name: String? = null,
-    val server_data: List<VsphimEpisodeData> = emptyList(),
+    val server_data: List<VsphimEpisodeData>? = emptyList(),
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

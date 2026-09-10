@@ -1,7 +1,7 @@
 package com.vsphim
 
 internal fun VsphimMovieDetail.tags(): List<String> =
-    (category.mapNotNull { it.name?.trim() } + country.mapNotNull { it.name?.trim() })
+    (category.orEmpty().mapNotNull { it.name?.trim() } + country.orEmpty().mapNotNull { it.name?.trim() })
         .filter { it.isNotEmpty() }
         .distinct()
 
@@ -16,6 +16,7 @@ internal fun VsphimMovieListItem.withDetails(detail: VsphimMovieDetail?): Vsphim
             name = it.name.nonBlankOr(name),
             origin_name = it.origin_name.nonBlankOr(origin_name),
             slug = it.slug.nonBlankOr(slug),
+            type = it.type.nonBlankOr(type),
             poster_url = it.poster_url.nonBlankOr(poster_url),
             thumb_url = it.thumb_url.nonBlankOr(thumb_url),
             year = it.year ?: year,
@@ -40,10 +41,10 @@ private object VsphimMovieNewestFirstComparator : Comparator<VsphimMovieListItem
 }
 
 internal fun VsphimMovieDetailResponse.toPlayables(): List<VsphimPlayable> =
-    episodes.asSequence()
+    episodes.orEmpty().asSequence()
         .flatMap { server ->
             val serverName = server.server_name?.trim().orEmpty().ifEmpty { "VSPHIM" }
-            server.server_data.asSequence().mapNotNull { item ->
+            server.server_data.orEmpty().asSequence().mapNotNull { item ->
                 val url = item.link_embed?.trim().orEmpty()
                 if (url.isEmpty()) return@mapNotNull null
                 val episodeName = item.name?.trim().orEmpty()

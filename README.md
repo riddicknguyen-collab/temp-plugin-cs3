@@ -4,7 +4,7 @@ Personal CloudStream 3 plugin repository.
 
 | Module | Language | Notes |
 | --- | --- | --- |
-| `VsphimProvider` | vi | VSPHIM JSON API provider, v9 |
+| `VsphimProvider` | vi | VSPHIM JSON API provider, v10 |
 | `YanHHProvider` | vi | YanHH3D provider |
 | `ExampleProvider` | en | Upstream template sample, kept as a reference |
 

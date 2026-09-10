@@ -132,4 +132,18 @@ class VsphimJsonParserTest {
         assertEquals("fresh-thumb.jpg", merged.thumb_url)
         assertEquals(2026, merged.year)
     }
+
+    @Test
+    fun `handles null optional detail arrays`() {
+        val movie = VsphimMovieDetail(
+            actor = null,
+            director = null,
+            category = null,
+            country = null,
+        )
+        val response = VsphimMovieDetailResponse(movie = movie, episodes = null)
+
+        assertTrue(movie.tags().isEmpty())
+        assertTrue(response.toPlayables().isEmpty())
+    }
 }

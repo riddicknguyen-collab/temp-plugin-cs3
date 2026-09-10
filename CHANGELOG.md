@@ -1,5 +1,12 @@
 # Changelog
 
+## VSPHIM v10
+
+- Preserve detail responses when optional actor, taxonomy, episode, or source
+  arrays are null in the upstream JSON.
+- Return the correct CloudStream search card type for movies and TV series.
+- Allow the detail page to load before playback sources are resolved.
+
 ## VSPHIM v9
 
 - Load homepage and search card details concurrently so the 20-card sections

@@ -1,6 +1,7 @@
 package com.vsphim
 
 import com.lagradost.cloudstream3.app
+import kotlinx.coroutines.delay
 import java.net.URLEncoder
 
 class VsphimApiClient(
@@ -60,10 +61,23 @@ class VsphimApiClient(
         return getJson(resolver.absoluteUrl(pagePath), parser::parseMovieList)
     }
 
-    private suspend fun <T> getJson(url: String, parse: (String) -> T?): T? =
-        runCatching {
-            parse(app.get(url, headers = headers, referer = resolver.mainUrl).text)
-        }.getOrNull()
+    private suspend fun <T> getJson(url: String, parse: (String) -> T?): T? {
+        repeat(2) { attempt ->
+            try {
+                return parse(app.get(url, headers = headers, referer = resolver.mainUrl).text)
+            } catch (error: Throwable) {
+                if (attempt == 0 && error.isRateLimited()) {
+                    delay(750)
+                    return@repeat
+                }
+                return null
+            }
+        }
+        return null
+    }
+
+    private fun Throwable.isRateLimited(): Boolean =
+        message?.contains("429") == true || message?.contains("Too Many Requests", ignoreCase = true) == true
 
     private fun encode(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name())
 }

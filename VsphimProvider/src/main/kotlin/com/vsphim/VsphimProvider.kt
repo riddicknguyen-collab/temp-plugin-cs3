@@ -23,12 +23,15 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.util.concurrent.ConcurrentHashMap
 
 class VsphimProvider : MainAPI() {
     private val resolver = VsphimDomainResolver()
     private val api = VsphimApiClient(resolver)
     private val detailCache = ConcurrentHashMap<String, VsphimMovieDetail>()
+    private val detailRequestLimiter = Semaphore(4)
 
     override var mainUrl = resolver.mainUrl
     override var name = VsphimConstants.PROVIDER_NAME
@@ -73,9 +76,11 @@ class VsphimProvider : MainAPI() {
                 ?: return null
             val playable = response.toPlayables()
 
-            if (movie.type.equals("single", ignoreCase = true)) {
-                val source = playable.firstOrNull() ?: return null
-                newMovieLoadResponse(title, detailUrl, TvType.Movie, source.url) {
+            if (!movie.type.isSeriesType()) {
+                // Keep the detail page usable even when the server has no playable
+                // source. The source can be resolved again when playback starts.
+                val dataUrl = playable.firstOrNull()?.url ?: detailUrl
+                newMovieLoadResponse(title, detailUrl, TvType.Movie, dataUrl) {
                     posterUrl = movie.posterUrl(resolver)
                     backgroundPosterUrl = movie.thumbUrl(resolver)
                     posterHeaders = this@VsphimProvider.posterHeaders
@@ -116,7 +121,7 @@ class VsphimProvider : MainAPI() {
     ): Boolean =
         runCatching {
             if (data.isBlank()) return false
-            val episodeUrl = resolver.absoluteUrl(data)
+            val episodeUrl = resolvePlaybackUrl(data) ?: return false
             val page = app.get(
                 episodeUrl,
                 headers = mapOf(
@@ -157,14 +162,18 @@ class VsphimProvider : MainAPI() {
         val title = name?.trim().orEmpty().ifEmpty { origin_name?.trim().orEmpty() }
         if (slug.isEmpty() || title.isEmpty()) return null
 
-        return newMovieSearchResponse(
-            title,
-            resolver.absoluteUrl("${VsphimConstants.MOVIE_PATH}/$slug"),
-            TvType.Movie,
-        ) {
-            posterUrl = (poster_url.nonBlankOr(thumb_url))
-                ?.let(resolver::absoluteUrl)
-            posterHeaders = this@VsphimProvider.posterHeaders
+        val url = resolver.absoluteUrl("${VsphimConstants.MOVIE_PATH}/$slug")
+        val poster = (poster_url.nonBlankOr(thumb_url))?.let(resolver::absoluteUrl)
+        return if (type.isSeriesType()) {
+            newTvSeriesSearchResponse(title, url, TvType.TvSeries) {
+                posterUrl = poster
+                posterHeaders = this@VsphimProvider.posterHeaders
+            }
+        } else {
+            newMovieSearchResponse(title, url, TvType.Movie) {
+                posterUrl = poster
+                posterHeaders = this@VsphimProvider.posterHeaders
+            }
         }
     }
 
@@ -172,13 +181,15 @@ class VsphimProvider : MainAPI() {
         coroutineScope {
             map { item ->
                 async {
-                    runCatching {
-                        val slug = item.slug?.trim().orEmpty()
-                        val details = if (slug.isEmpty()) null else getMovieDetails(slug)
-                        // The list endpoint already contains enough data to render a card.
-                        // Keep that card when the optional detail refresh fails.
-                        item.withDetails(details).toSearchResponse()
-                    }.getOrNull()
+                    detailRequestLimiter.withPermit {
+                        runCatching {
+                            val slug = item.slug?.trim().orEmpty()
+                            val details = if (slug.isEmpty()) null else getMovieDetails(slug)
+                            // The list endpoint already contains enough data to render a card.
+                            // Keep that card when the optional detail refresh fails.
+                            item.withDetails(details).toSearchResponse()
+                        }.getOrNull()
+                    }
                 }
             }.awaitAll().filterNotNull()
         }
@@ -188,6 +199,12 @@ class VsphimProvider : MainAPI() {
         val detail = api.getMovie(slug)?.movie ?: return null
         detailCache.putIfAbsent(slug, detail)
         return detail
+    }
+
+    private suspend fun resolvePlaybackUrl(data: String): String? {
+        val value = resolver.absoluteUrl(data)
+        if (!value.contains("${VsphimConstants.MOVIE_PATH}/")) return value
+        return api.getMovie(value)?.toPlayables()?.firstOrNull()?.url
     }
 
     private fun VsphimMovieDetail.posterUrl(resolver: VsphimDomainResolver): String? =
@@ -209,6 +226,11 @@ class VsphimProvider : MainAPI() {
         if (uri.scheme.isNullOrBlank() || uri.authority.isNullOrBlank()) null
         else "${uri.scheme}://${uri.authority}"
     }.getOrNull()
+
+    private fun String?.isSeriesType(): Boolean =
+        this.equals("series", ignoreCase = true) ||
+            this.equals("hoathinh", ignoreCase = true) ||
+            this.equals("tvshows", ignoreCase = true)
 
     private fun log(message: String, error: Throwable? = null) {
         if (error == null) {
