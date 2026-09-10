@@ -32,6 +32,21 @@ fun Project.cloudstream(configuration: CloudstreamExtension.() -> Unit) = extens
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
 
+// raw.githubusercontent.com may cache a binary at the same builds-branch path.
+// Add the source commit to each artifact URL so CloudStream always downloads the
+// binary that matches the generated plugin metadata.
+tasks.matching { it.name == "makePluginsJson" }.configureEach {
+    doLast {
+        val cacheToken = System.getenv("GITHUB_SHA") ?: "local"
+        val pluginsFile = layout.buildDirectory.file("plugins.json").get().asFile
+        if (pluginsFile.isFile) {
+            pluginsFile.writeText(
+                pluginsFile.readText().replace(".cs3\"", ".cs3?cache=$cacheToken\""),
+            )
+        }
+    }
+}
+
 subprojects {
     apply(plugin = "com.android.library")
     apply(plugin = "kotlin-android")
