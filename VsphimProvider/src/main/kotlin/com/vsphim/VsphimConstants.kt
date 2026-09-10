@@ -26,18 +26,24 @@ object VsphimConstants {
     const val STATUS_PARAM = "status"
 
     /**
-     * Each entry is a real API query, so CloudStream can request page 2, 3, ...
-     * when the user opens a section. The API's default ordering is modified
+     * Each entry is a real category API query, so CloudStream can request page 2,
+     * 3, ... when the user opens a section. The category slugs are the same values
+     * returned in each movie's `category` array. The API orders by modified
      * descending; the provider also applies the same ordering defensively.
+     *
+     * VSPHIM exposes a very large, noisy taxonomy. Keep the homepage to stable,
+     * useful categories instead of creating hundreds of nearly empty sections.
      */
     val MAIN_PAGES = listOf(
         "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Mới cập nhật",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=single" to "Phim lẻ",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=series" to "Phim bộ",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=hoathinh" to "Hoạt hình",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&type=tvshows" to "TV Shows",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&status=ongoing" to "Đang cập nhật",
-        "$LIST_PATH?$LIMIT_PARAM=$HOME_PAGE_LIMIT&status=completed" to "Hoàn thành",
+        "$GENRES_PATH/vietsub?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Vietsub",
+        "$GENRES_PATH/18-tuoi?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "18 tuổi",
+        "$GENRES_PATH/hanh-dong?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Hành động",
+        "$GENRES_PATH/nhat-ban?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Nhật Bản",
+        "$GENRES_PATH/trung-quoc?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "Trung Quốc",
+        "$GENRES_PATH/3d?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "3D",
+        "$GENRES_PATH/4k?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "4K",
+        "$GENRES_PATH/hd?$LIMIT_PARAM=$HOME_PAGE_LIMIT" to "HD",
     )
 
     val KNOWN_DOMAINS = setOf("nguon.vsphim.com")

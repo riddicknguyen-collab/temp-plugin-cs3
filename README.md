@@ -4,7 +4,7 @@ Personal CloudStream 3 plugin repository.
 
 | Module | Language | Notes |
 | --- | --- | --- |
-| `VsphimProvider` | vi | VSPHIM JSON API provider, v5 |
+| `VsphimProvider` | vi | VSPHIM JSON API provider, v7 |
 | `YanHHProvider` | vi | YanHH3D provider |
 | `ExampleProvider` | en | Upstream template sample, kept as a reference |
 
@@ -17,7 +17,7 @@ https://cdn.jsdelivr.net/gh/riddicknguyen-collab/temp-plugin-cs3/repo.json
 | Document | What it covers |
 | --- | --- |
 | [docs/adding-a-new-provider.md](docs/adding-a-new-provider.md) | Copying `YanHHProvider` into a provider for another site, step by step |
-| [docs/plan-vsphim-provider.md](docs/plan-vsphim-provider.md) | VSPHIM implementation scope, homepage sections, API mapping and status |
+| [docs/plan-vsphim-provider.md](docs/plan-vsphim-provider.md) | VSPHIM implementation scope, category homepage sections, API mapping and status |
 | [docs/tham-khao/vsphim-api-reference.md](docs/tham-khao/vsphim-api-reference.md) | VSPHIM public API snapshot and response contract |
 | [AGENTS.md](AGENTS.md) | Architecture rules, build prerequisites, release process |
 | [docs/plan.md](docs/plan.md) | YanHH3D implementation plan and per-phase status |

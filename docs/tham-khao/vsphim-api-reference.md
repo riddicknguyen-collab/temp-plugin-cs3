@@ -526,6 +526,7 @@ Khi dùng trong CloudStream, nên giữ `Referer` và `User-Agent` theo chính s
 - UI tài liệu ghi “sắp xếp theo nhiều tiêu chí” ở phần giới thiệu, nhưng metadata endpoint `/api/danh-sach` không khai báo tham số sort/order/by. Chỉ dùng các tham số được liệt kê cho endpoint đó cho tới khi xác minh route live.
 - Provider sort lại danh sách theo `modified.time` giảm dần và dùng `_id` giảm dần làm fallback khi timestamp thiếu.
 - `/api/phim/[slug]` là nguồn metadata đầy đủ cho card/detail; `poster_url` là poster dọc và `thumb_url` là ảnh thumb/background.
+- Homepage dùng `/api/the-loai/[slug]?limit=20&page=n` cho các nhóm category; mỗi slug tương ứng với giá trị `slug` trong `movie.category`, nên khi mở nhóm CloudStream có thể tải tiếp các trang còn lại.
 
 ## 8. Nguồn và lịch sử kiểm tra
 

@@ -36,7 +36,8 @@ class VsphimDomainResolverTest {
 
     @Test
     fun `homepage is split into twenty item paginated sections`() {
-        assertEquals(7, VsphimConstants.MAIN_PAGES.size)
+        assertEquals(9, VsphimConstants.MAIN_PAGES.size)
         assertTrue(VsphimConstants.MAIN_PAGES.all { it.first.contains("limit=20") })
+        assertTrue(VsphimConstants.MAIN_PAGES.drop(1).all { it.first.contains("/api/the-loai/") })
     }
 }

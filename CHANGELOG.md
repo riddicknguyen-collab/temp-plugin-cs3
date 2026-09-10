@@ -1,5 +1,10 @@
 # Changelog
 
+## VSPHIM v7
+
+- Group the homepage by real VSPHIM movie categories using `/api/the-loai/{slug}`.
+- Keep 20 newest films in each category and preserve pagination when opening a group.
+
 ## VSPHIM v6
 
 - Also refresh search-result cards from `/api/phim/{slug}` so each film uses the publisher's current `poster_url` and `thumb_url`.
