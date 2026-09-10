@@ -40,4 +40,5 @@ class VsphimDomainResolverTest {
         assertTrue(VsphimConstants.MAIN_PAGES.all { it.first.contains("limit=20") })
         assertTrue(VsphimConstants.MAIN_PAGES.drop(1).all { it.first.contains("/api/the-loai/") })
     }
+
 }

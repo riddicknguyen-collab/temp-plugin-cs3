@@ -1,5 +1,11 @@
 # Changelog
 
+## VSPHIM v11
+
+- Use VSPHIM `thumb_url` fanart for landscape homepage and search cards.
+- Mark paginated homepage sections as horizontal CloudStream rows so their
+  full-list navigation remains available.
+
 ## VSPHIM v10
 
 - Preserve detail responses when optional actor, taxonomy, episode, or source

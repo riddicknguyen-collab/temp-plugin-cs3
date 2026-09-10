@@ -3,7 +3,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 
-version = 10
+version = 11
 
 cloudstream {
     description = "VSPHIM JSON API provider for a private CloudStream repo"

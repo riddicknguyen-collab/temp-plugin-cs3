@@ -4,6 +4,7 @@ import android.util.Log
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageData
 import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
@@ -38,7 +39,14 @@ class VsphimProvider : MainAPI() {
     override var lang = "vi"
     override val hasMainPage = true
     override val supportedTypes = setOf(TvType.NSFW, TvType.Movie, TvType.TvSeries)
-    override val mainPage = mainPageOf(*VsphimConstants.MAIN_PAGES.toTypedArray())
+    // The VSPHIM thumb is a landscape fanart image. Mark every homepage row as
+    // horizontal so CloudStream uses the matching card layout and keeps the
+    // row's "view all" navigation available for paginated sections.
+    override val mainPage = mainPageOf(
+        *VsphimConstants.MAIN_PAGES.map { (path, title) ->
+            MainPageData(title, path, true)
+        }.toTypedArray(),
+    )
 
     private val posterHeaders = mapOf(
         "User-Agent" to VsphimConstants.USER_AGENT,
@@ -81,7 +89,7 @@ class VsphimProvider : MainAPI() {
                 // source. The source can be resolved again when playback starts.
                 val dataUrl = playable.firstOrNull()?.url ?: detailUrl
                 newMovieLoadResponse(title, detailUrl, TvType.Movie, dataUrl) {
-                    posterUrl = movie.posterUrl(resolver)
+                    posterUrl = movie.thumbUrl(resolver)
                     backgroundPosterUrl = movie.thumbUrl(resolver)
                     posterHeaders = this@VsphimProvider.posterHeaders
                     plot = movie.content
@@ -100,7 +108,7 @@ class VsphimProvider : MainAPI() {
                         }
                     },
                 ) {
-                    posterUrl = movie.posterUrl(resolver)
+                    posterUrl = movie.thumbUrl(resolver)
                     backgroundPosterUrl = movie.thumbUrl(resolver)
                     posterHeaders = this@VsphimProvider.posterHeaders
                     plot = movie.content
@@ -163,15 +171,15 @@ class VsphimProvider : MainAPI() {
         if (slug.isEmpty() || title.isEmpty()) return null
 
         val url = resolver.absoluteUrl("${VsphimConstants.MOVIE_PATH}/$slug")
-        val poster = (poster_url.nonBlankOr(thumb_url))?.let(resolver::absoluteUrl)
+        val fanart = (thumb_url.nonBlankOr(poster_url))?.let(resolver::absoluteUrl)
         return if (type.isSeriesType()) {
             newTvSeriesSearchResponse(title, url, TvType.TvSeries) {
-                posterUrl = poster
+                posterUrl = fanart
                 posterHeaders = this@VsphimProvider.posterHeaders
             }
         } else {
             newMovieSearchResponse(title, url, TvType.Movie) {
-                posterUrl = poster
+                posterUrl = fanart
                 posterHeaders = this@VsphimProvider.posterHeaders
             }
         }
@@ -206,10 +214,6 @@ class VsphimProvider : MainAPI() {
         if (!value.contains("${VsphimConstants.MOVIE_PATH}/")) return value
         return api.getMovie(value)?.toPlayables()?.firstOrNull()?.url
     }
-
-    private fun VsphimMovieDetail.posterUrl(resolver: VsphimDomainResolver): String? =
-        poster_url.nonBlankOr(thumb_url)
-            ?.let(resolver::absoluteUrl)
 
     private fun VsphimMovieDetail.thumbUrl(resolver: VsphimDomainResolver): String? =
         thumb_url.nonBlankOr(poster_url)

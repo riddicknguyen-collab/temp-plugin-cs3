@@ -1,4 +1,4 @@
-# VsphimProvider — kế hoạch triển khai và trạng thái (v10)
+# VsphimProvider — kế hoạch triển khai và trạng thái (v11)
 
 ## Mục tiêu
 
@@ -34,7 +34,7 @@ Homepage dùng các nhóm thể loại thật từ metadata phim, mỗi nhóm hi
 - `series`, `tvshows`, `hoathinh` → `newTvSeriesLoadResponse`.
 - Nhiều server được flatten thành các episode có tên `<server> — <episode>` và dedupe theo embed URL.
 - Search response dùng URL API detail `/api/phim/{slug}`; `load()` gọi trực tiếp API detail.
-- `poster_url` được dùng làm poster; `thumb_url` được dùng làm `backgroundPosterUrl`, với fallback giữa hai trường.
+- `thumb_url` được ưu tiên làm ảnh fanart/card khổ ngang và `backgroundPosterUrl`; `poster_url` là fallback khi thumb trống.
 - `loadLinks()` tải player page, parse playlist HLS trực tiếp; embed host không nhận
   diện được mới chuyển cho `loadExtractor()`.
 
@@ -72,6 +72,6 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - `VsphimProvider:make`: pass; sinh `VsphimProvider/build/VsphimProvider.cs3`.
 - Manifest package xác nhận `com.vsphim.VsphimPlugin`.
 - `makePluginsJson`: pass; manifest gồm `VsphimProvider`, `YanHHProvider` và `ExampleProvider`.
-- VSPHIM v10: load detail chịu được các mảng optional trả về `null`, card dùng đúng loại Movie/TvSeries, và trang detail không còn phụ thuộc việc có source playback ngay từ lần load đầu; VSPHIM v9: homepage/search làm giàu metadata detail đồng thời và giữ card từ list khi detail request riêng lẻ thất bại, tránh timeout làm rỗng các section; metadata plugin dùng GitHub raw route trực tiếp để tránh CloudStream đổi sang CDN jsDelivr bị lệch hash khi tải binary; homepage tiếp tục dùng các endpoint `/api/the-loai/{slug}` tương ứng category trong metadata phim, mỗi nhóm có 20 phim mới nhất và pagination đầy đủ.
+- VSPHIM v11: card và homepage row dùng fanart ngang từ `thumb_url`, các nhóm được khai báo `horizontalImages` để mở danh sách đầy đủ; VSPHIM v10: load detail chịu được các mảng optional trả về `null`, card dùng đúng loại Movie/TvSeries, và trang detail không còn phụ thuộc việc có source playback ngay từ lần load đầu; VSPHIM v9: homepage/search làm giàu metadata detail đồng thời và giữ card từ list khi detail request riêng lẻ thất bại, tránh timeout làm rỗng các section; metadata plugin dùng GitHub raw route trực tiếp để tránh CloudStream đổi sang CDN jsDelivr bị lệch hash khi tải binary; homepage tiếp tục dùng các endpoint `/api/the-loai/{slug}` tương ứng category trong metadata phim, mỗi nhóm có 20 phim mới nhất và pagination đầy đủ.
 - Regression `YanHHProvider:test` hiện có 8 test fail do baseline đã kỳ vọng domain `yanhh3d.pw` trong khi constants hiện dùng `yanhh3d.ee`; không phát sinh từ module VSPHIM và không sửa theo phạm vi goal.
 - Manual install/playback chưa thực hiện được vì chưa có device/emulator kết nối; `adb.exe` tồn tại tại Android SDK nhưng chưa nằm trong PATH.
