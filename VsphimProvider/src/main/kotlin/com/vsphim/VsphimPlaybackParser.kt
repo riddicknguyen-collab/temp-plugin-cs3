@@ -7,7 +7,9 @@ data class VsphimPlayback(
     val isPlaylist: Boolean = true,
 )
 
-/** Pure parsing for the VSPHIM player page returned in `link_embed`. */
+/** Pure parsing for the VSPHIM player page returned in `link_embed`.
+ * The player currently exposes an unsigned master playlist through base URL + video hash.
+ */
 object VsphimPlaybackParser {
     private val signedEnabled = Regex("""enableSignedUrl\s*:\s*(true|false)""", RegexOption.IGNORE_CASE)
     private val signedMaster = Regex("""signedMasterUrl\s*:\s*[\"']([^\"']+)[\"']""")
