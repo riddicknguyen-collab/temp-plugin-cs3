@@ -32,26 +32,6 @@ fun Project.cloudstream(configuration: CloudstreamExtension.() -> Unit) = extens
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
 
-// Publish plugin artifact URLs through jsDelivr. A commit token is added to each
-// URL because jsDelivr can otherwise keep an older .cs3 at the same path after
-// the builds branch is replaced.
-tasks.matching { it.name == "makePluginsJson" }.configureEach {
-    doLast {
-        val repository = System.getenv("GITHUB_REPOSITORY") ?: "user/repo"
-        val rawPrefix = "https://raw.githubusercontent.com/$repository/builds/"
-        val cdnPrefix = "https://cdn.jsdelivr.net/gh/$repository@builds/"
-        val cacheToken = System.getenv("GITHUB_SHA") ?: "local"
-        val pluginsFile = layout.buildDirectory.file("plugins.json").get().asFile
-        if (pluginsFile.isFile) {
-            pluginsFile.writeText(
-                pluginsFile.readText()
-                    .replace(rawPrefix, cdnPrefix)
-                    .replace(".cs3\"", ".cs3?v=$cacheToken\""),
-            )
-        }
-    }
-}
-
 subprojects {
     apply(plugin = "com.android.library")
     apply(plugin = "kotlin-android")
