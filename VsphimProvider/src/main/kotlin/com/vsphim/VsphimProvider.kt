@@ -8,6 +8,7 @@ import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
@@ -16,7 +17,9 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 class VsphimProvider : MainAPI() {
     private val resolver = VsphimDomainResolver()
     private val api = VsphimApiClient(resolver)
@@ -103,7 +106,37 @@ class VsphimProvider : MainAPI() {
     ): Boolean =
         runCatching {
             if (data.isBlank()) return false
-            loadExtractor(data, mainUrl, subtitleCallback, callback)
+            val episodeUrl = resolver.absoluteUrl(data)
+            val page = app.get(
+                episodeUrl,
+                headers = mapOf(
+                    "Accept" to "text/html,application/xhtml+xml",
+                    "User-Agent" to VsphimConstants.USER_AGENT,
+                ),
+                referer = mainUrl,
+            )
+            val playback = VsphimPlaybackParser.parse(page.text, episodeUrl)
+            if (playback != null) {
+                val mediaHeaders = buildMap {
+                    put("User-Agent", VsphimConstants.USER_AGENT)
+                    put("Referer", episodeUrl)
+                    originOf(playback.url)?.let { put("Origin", it) }
+                }
+                callback(
+                    newExtractorLink(
+                        source = name,
+                        name = "$name HLS",
+                        url = playback.url,
+                        type = ExtractorLinkType.M3U8,
+                    ) {
+                        referer = episodeUrl
+                        headers = mediaHeaders
+                    },
+                )
+                true
+            } else {
+                loadExtractor(episodeUrl, mainUrl, subtitleCallback, callback)
+            }
         }.getOrElse { error ->
             log("loadLinks failed for $data", error)
             false
@@ -129,6 +162,12 @@ class VsphimProvider : MainAPI() {
 
     private fun VsphimMovieListResponse.hasNext(page: Int): Boolean =
         pagination?.hasNext(page) ?: false
+
+    private fun originOf(url: String): String? = runCatching {
+        val uri = java.net.URI(url)
+        if (uri.scheme.isNullOrBlank() || uri.authority.isNullOrBlank()) null
+        else "${uri.scheme}://${uri.authority}"
+    }.getOrNull()
 
     private fun log(message: String, error: Throwable? = null) {
         if (error == null) {

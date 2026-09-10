@@ -10,7 +10,9 @@ Tạo provider CloudStream 3 Kotlin độc lập cho VSPHIM, dùng public JSON A
 - Module riêng: `VsphimProvider`.
 - Trang chủ, các nhóm lọc ổn định, phân trang và tìm kiếm.
 - Chi tiết phim, movie/series mapping và episode từ `episodes[].server_data[]`.
-- Chuyển `link_embed` cho CloudStream `loadExtractor()`.
+- Đọc trang player trong `link_embed`, lấy playlist HLS `master.m3u8` và truyền
+  `Referer`/`User-Agent`/`Origin` cho CloudStream; vẫn fallback sang extractor nếu
+  player page không nhận diện được.
 - Jackson models/parser thuần JSON, không network và không import CloudStream.
 - Public provider methods bắt lỗi và trả kết quả an toàn.
 - Không WebView, bypass, download, rehost hoặc tự suy diễn HLS từ embed URL.
@@ -29,7 +31,8 @@ Tạo provider CloudStream 3 Kotlin độc lập cho VSPHIM, dùng public JSON A
 - `series`, `tvshows`, `hoathinh` → `newTvSeriesLoadResponse`.
 - Nhiều server được flatten thành các episode có tên `<server> — <episode>` và dedupe theo embed URL.
 - Search response dùng URL API detail `/api/phim/{slug}`; `load()` gọi trực tiếp API detail.
-- `loadLinks()` gọi `loadExtractor()` và trả `false` nếu embed host không được hỗ trợ.
+- `loadLinks()` tải player page, parse playlist HLS trực tiếp; embed host không nhận
+  diện được mới chuyển cho `loadExtractor()`.
 
 ## Kiểm thử và phát hành
 
@@ -49,14 +52,14 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - [x] Khảo sát API và chốt phạm vi public API.
 - [x] Tạo module/plugin metadata.
 - [x] Tạo models, JSON parser, resolver và API client.
-- [x] Implement CloudStream browse/search/detail/loadLinks.
+- [x] Implement CloudStream browse/search/detail/loadLinks và VSPHIM player playback.
 - [x] Viết unit tests và fixtures.
 - [x] Build `.cs3`, `plugins.json` và kiểm tra manifest/package.
 - [ ] Manual verification trên CloudStream/ADB (SDK có `platform-tools\adb.exe`, nhưng hiện không có device/emulator kết nối).
 
 ## Kết quả triển khai
 
-- `VsphimProvider:test`: pass, 10 tests.
+- `VsphimProvider:test`: pass, gồm test parser API và parser player/HLS.
 - `VsphimProvider:make`: pass; sinh `VsphimProvider/build/VsphimProvider.cs3`.
 - Manifest package xác nhận `com.vsphim.VsphimPlugin`.
 - `makePluginsJson`: pass; manifest gồm `VsphimProvider`, `YanHHProvider` và `ExampleProvider`.

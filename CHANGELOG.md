@@ -1,5 +1,11 @@
 # Changelog
 
+## VSPHIM v4
+
+- Resolve `link_embed` player pages to the VSPHIM `master.m3u8` playlist.
+- Preserve player context headers so CloudStream can load the manifest and segments.
+- Keep the repository manifest on one stable jsDelivr `@builds` URL without a version query.
+
 ## VSPHIM v3
 
 - Declared `TvType.NSFW` in the runtime provider types so CloudStream can show VSPHIM in the NSFW source category.
