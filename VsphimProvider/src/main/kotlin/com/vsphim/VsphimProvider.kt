@@ -54,7 +54,7 @@ class VsphimProvider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> =
         runCatching {
             if (query.isBlank()) return emptyList()
-            api.search(query.trim())?.items?.mapNotNull { it.toSearchResponse() }.orEmpty()
+            api.search(query.trim())?.items.orEmpty().toSearchResponsesWithDetails()
         }.getOrElse { error ->
             log("search failed", error)
             emptyList()

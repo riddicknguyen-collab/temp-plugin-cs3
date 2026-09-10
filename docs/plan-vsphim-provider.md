@@ -11,7 +11,7 @@ Homepage dùng các nhóm lọc ổn định, mỗi nhóm hiển thị 20 phim m
 - Module riêng: `VsphimProvider`.
 - Trang chủ gồm các nhóm `Mới cập nhật`, `Phim lẻ`, `Phim bộ`, `Hoạt hình`, `TV Shows`, `Đang cập nhật` và `Hoàn thành`.
 - Mỗi nhóm gọi `/api/danh-sach` với `limit=20`, sắp xếp `modified` giảm dần và giữ pagination khi người dùng mở nhóm.
-- Dùng `/api/phim/{slug}` để làm giàu title, năm, poster, thumb và metadata trước khi tạo card; detail được cache trong phiên provider.
+- Dùng `/api/phim/{slug}` để làm giàu title, năm, poster, thumb và metadata trước khi tạo card ở trang chủ và tìm kiếm; detail được cache trong phiên provider.
 - Chi tiết phim, movie/series mapping và episode từ `episodes[].server_data[]`.
 - Đọc trang player trong `link_embed`, lấy playlist HLS `master.m3u8` và truyền
   `Referer`/`User-Agent`/`Origin` cho CloudStream; vẫn fallback sang extractor nếu
@@ -61,7 +61,7 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - [x] Tạo models, JSON parser, resolver và API client.
 - [x] Implement CloudStream browse/search/detail/loadLinks và VSPHIM player playback.
 - [x] Thêm homepage sections giới hạn 20 phim, sort theo `modified` và phân trang toàn bộ từng nhóm.
-- [x] Làm giàu card bằng `/api/phim/{slug}`, map đầy đủ poster/thumb và thêm fallback ảnh.
+- [x] Làm giàu card bằng `/api/phim/{slug}` ở trang chủ và tìm kiếm, map đầy đủ poster/thumb và thêm fallback ảnh.
 - [x] Viết unit tests và fixtures.
 - [x] Build `.cs3`, `plugins.json` và kiểm tra manifest/package.
 - [ ] Manual verification trên CloudStream/ADB (SDK có `platform-tools\adb.exe`, nhưng hiện không có device/emulator kết nối).
@@ -72,6 +72,6 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - `VsphimProvider:make`: pass; sinh `VsphimProvider/build/VsphimProvider.cs3`.
 - Manifest package xác nhận `com.vsphim.VsphimPlugin`.
 - `makePluginsJson`: pass; manifest gồm `VsphimProvider`, `YanHHProvider` và `ExampleProvider`.
-- VSPHIM v5: homepage gọi danh sách giới hạn 20, gọi detail `/api/phim/{slug}` để cập nhật card và dùng thumb làm background poster.
+- VSPHIM v6: homepage và search gọi detail `/api/phim/{slug}` để cập nhật card theo ảnh mới nhất của nhà phát hành; dùng thumb làm background poster.
 - Regression `YanHHProvider:test` hiện có 8 test fail do baseline đã kỳ vọng domain `yanhh3d.pw` trong khi constants hiện dùng `yanhh3d.ee`; không phát sinh từ module VSPHIM và không sửa theo phạm vi goal.
 - Manual install/playback chưa thực hiện được vì chưa có device/emulator kết nối; `adb.exe` tồn tại tại Android SDK nhưng chưa nằm trong PATH.

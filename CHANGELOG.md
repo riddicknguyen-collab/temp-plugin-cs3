@@ -1,5 +1,9 @@
 # Changelog
 
+## VSPHIM v6
+
+- Also refresh search-result cards from `/api/phim/{slug}` so each film uses the publisher's current `poster_url` and `thumb_url`.
+
 ## VSPHIM v5
 
 - Group the homepage into paginated category sections with 20 newest movies per section.
