@@ -56,6 +56,13 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 
 ## Trạng thái
 
+### Known issue sau v11
+
+Theo kiểm tra thực tế trên CloudStream sau khi cài artifact v11, card vẫn chưa
+hiển thị fanart ngang, và khi chọn phim chỉ hiện tiêu đề nhưng không tải được
+nội dung chi tiết. Chi tiết reproduction, giả thuyết và checklist cho phiên sau
+được ghi tại `docs/notes-vsphim-after-v11.md`.
+
 - [x] Khảo sát API và chốt phạm vi public API.
 - [x] Tạo module/plugin metadata.
 - [x] Tạo models, JSON parser, resolver và API client.

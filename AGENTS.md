@@ -13,7 +13,7 @@ Both providers must return safe results when upstream sites fail, preserve the h
 
 | Module | Current version | Data source | Notes |
 | --- | ---: | --- | --- |
-| `VsphimProvider` | 7 | `https://nguon.vsphim.com/api` | Runtime types include NSFW, Movie, and TvSeries. Homepage sections use real category slugs and 20 items per page. |
+| `VsphimProvider` | 11 | `https://nguon.vsphim.com/api` | Runtime types include NSFW, Movie, and TvSeries. Homepage sections use real category slugs, 20 items per page, and are configured for landscape rows. See the post-v11 issue note before changing card/detail mapping. |
 | `YanHHProvider` | 8 | Public YanHH3D HTML | Current default domain is centralized in `YanHH3DConstants`; parser behavior is covered by HTML fixtures. |
 | `ExampleProvider` | 1 | Template/sample | Keep as an upstream module-shape reference, not production code. |
 
@@ -74,7 +74,8 @@ Current VSPHIM behavior:
 - Do not generate homepage sections from the entire `/api/the-loai` catalog; the live taxonomy contains thousands of noisy and nearly empty tags.
 - Sort list responses by `modified.time` descending, with `_id` descending as fallback.
 - Enrich homepage and search cards through `/api/phim/{slug}` and cache detail responses for the provider session.
-- Use `poster_url` for card/detail posters and `thumb_url` for `backgroundPosterUrl`; fall back between them when one is blank.
+- Prefer `thumb_url` for landscape fanart on cards and detail backgrounds, with `poster_url` as fallback when the thumb is blank. This is implemented in v11 but still needs manual CloudStream verification because the installed runtime was reported to show title-only cards.
+- Homepage `MainPageData` entries set `horizontalImages = true` and `HomePageResponse.hasNext` comes from API pagination. If a group cannot open its full list, verify the installed artifact version and capture CloudStream logs before changing the pagination contract.
 - Flatten `episodes[].server_data[]`, retain the server name, and deduplicate by playable URL.
 - Fetch `link_embed` as a player page. `VsphimPlaybackParser` may accept a direct playlist, signed master URL, or `baseUrl + videoHash`; otherwise use CloudStream extractors.
 
@@ -169,7 +170,8 @@ https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/re
 ## Documentation Map
 
 - `docs/adding-a-new-provider.md` - setup, module scaffolding, testing, and release guide.
-- `docs/plan-vsphim-provider.md` - VSPHIM v7 scope, category homepage behavior, and implementation status.
+- `docs/plan-vsphim-provider.md` - VSPHIM v11 scope, category homepage behavior, implementation status, and unresolved post-v11 issue.
+- `docs/notes-vsphim-after-v11.md` - reproduction note for title-only cards, missing fanart, and detail/content loading failures to continue in the next session.
 - `docs/tham-khao/vsphim-api-reference.md` - VSPHIM API endpoints and observed response schemas.
 - `docs/plan.md` - YanHH3D implementation history and current caveats.
 - `docs/YanHH3D_CloudStream_Plugin_PRD.md` - original YanHH3D product requirements.
