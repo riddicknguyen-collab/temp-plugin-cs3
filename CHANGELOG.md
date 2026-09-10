@@ -1,5 +1,17 @@
 # Changelog
 
+## VSPHIM v9
+
+- Load homepage and search card details concurrently so the 20-card sections
+  finish before CloudStream's request timeout.
+- Keep list cards when an individual detail refresh fails.
+
+## VSPHIM v8
+
+- Use GitHub's direct raw route in repository metadata so CloudStream's optional
+  jsDelivr proxy cannot serve a stale `.cs3` binary and fail hash validation.
+- Bump the plugin version so CloudStream can receive the corrected download URL.
+
 ## VSPHIM v7
 
 - Group the homepage by real VSPHIM movie categories using `/api/the-loai/{slug}`.

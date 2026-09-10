@@ -20,6 +20,9 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import java.util.concurrent.ConcurrentHashMap
 
 class VsphimProvider : MainAPI() {
@@ -165,15 +168,20 @@ class VsphimProvider : MainAPI() {
         }
     }
 
-    private suspend fun List<VsphimMovieListItem>.toSearchResponsesWithDetails(): List<SearchResponse> {
-        val responses = ArrayList<SearchResponse>(size)
-        for (item in this) {
-            val slug = item.slug?.trim().orEmpty()
-            val details = if (slug.isEmpty()) null else getMovieDetails(slug)
-            item.withDetails(details).toSearchResponse()?.let(responses::add)
+    private suspend fun List<VsphimMovieListItem>.toSearchResponsesWithDetails(): List<SearchResponse> =
+        coroutineScope {
+            map { item ->
+                async {
+                    runCatching {
+                        val slug = item.slug?.trim().orEmpty()
+                        val details = if (slug.isEmpty()) null else getMovieDetails(slug)
+                        // The list endpoint already contains enough data to render a card.
+                        // Keep that card when the optional detail refresh fails.
+                        item.withDetails(details).toSearchResponse()
+                    }.getOrNull()
+                }
+            }.awaitAll().filterNotNull()
         }
-        return responses
-    }
 
     private suspend fun getMovieDetails(slug: String): VsphimMovieDetail? {
         detailCache[slug]?.let { return it }

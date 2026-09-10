@@ -1,4 +1,4 @@
-# VsphimProvider — kế hoạch triển khai và trạng thái (v7)
+# VsphimProvider — kế hoạch triển khai và trạng thái (v9)
 
 ## Mục tiêu
 
@@ -72,6 +72,6 @@ episode map đúng và ít nhất một `link_embed` được CloudStream extrac
 - `VsphimProvider:make`: pass; sinh `VsphimProvider/build/VsphimProvider.cs3`.
 - Manifest package xác nhận `com.vsphim.VsphimPlugin`.
 - `makePluginsJson`: pass; manifest gồm `VsphimProvider`, `YanHHProvider` và `ExampleProvider`.
-- VSPHIM v7: homepage dùng các endpoint `/api/the-loai/{slug}` tương ứng category trong metadata phim; mỗi nhóm có 20 phim mới nhất và pagination đầy đủ.
+- VSPHIM v9: homepage/search làm giàu metadata detail đồng thời và giữ card từ list khi detail request riêng lẻ thất bại, tránh timeout làm rỗng các section; metadata plugin dùng GitHub raw route trực tiếp để tránh CloudStream đổi sang CDN jsDelivr bị lệch hash khi tải binary; homepage tiếp tục dùng các endpoint `/api/the-loai/{slug}` tương ứng category trong metadata phim, mỗi nhóm có 20 phim mới nhất và pagination đầy đủ.
 - Regression `YanHHProvider:test` hiện có 8 test fail do baseline đã kỳ vọng domain `yanhh3d.pw` trong khi constants hiện dùng `yanhh3d.ee`; không phát sinh từ module VSPHIM và không sửa theo phạm vi goal.
 - Manual install/playback chưa thực hiện được vì chưa có device/emulator kết nối; `adb.exe` tồn tại tại Android SDK nhưng chưa nằm trong PATH.

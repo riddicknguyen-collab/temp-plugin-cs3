@@ -38,11 +38,20 @@ fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByN
 tasks.matching { it.name == "makePluginsJson" }.configureEach {
     doLast {
         val cacheToken = System.getenv("GITHUB_SHA") ?: "local"
+        val githubRepository = System.getenv("GITHUB_REPOSITORY")
         val pluginsFile = layout.buildDirectory.file("plugins.json").get().asFile
         if (pluginsFile.isFile) {
-            pluginsFile.writeText(
-                pluginsFile.readText().replace(".cs3\"", ".cs3?cache=$cacheToken\""),
-            )
+            var contents = pluginsFile.readText()
+            if (!githubRepository.isNullOrBlank()) {
+                // CloudStream optionally rewrites raw.githubusercontent.com URLs
+                // to jsDelivr. Use GitHub's raw route instead so CDN cache drift
+                // cannot make the published file hash differ from the metadata.
+                contents = contents.replace(
+                    "https://raw.githubusercontent.com/$githubRepository/builds/",
+                    "https://github.com/$githubRepository/raw/refs/heads/builds/",
+                )
+            }
+            pluginsFile.writeText(contents.replace(".cs3\"", ".cs3?cache=$cacheToken\""))
         }
     }
 }

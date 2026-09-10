@@ -3,6 +3,6 @@
   "description": "Private CloudStream plugins for personal use",
   "manifestVersion": 1,
   "pluginLists": [
-    "https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/plugins.json"
+    "https://github.com/riddicknguyen-collab/temp-plugin-cs3/raw/refs/heads/builds/plugins.json"
   ]
 }

@@ -4,14 +4,14 @@ Personal CloudStream 3 plugin repository.
 
 | Module | Language | Notes |
 | --- | --- | --- |
-| `VsphimProvider` | vi | VSPHIM JSON API provider, v7 |
+| `VsphimProvider` | vi | VSPHIM JSON API provider, v9 |
 | `YanHHProvider` | vi | YanHH3D provider |
 | `ExampleProvider` | en | Upstream template sample, kept as a reference |
 
 Add in CloudStream via Settings → Extensions → Add Repository:
 
 ```text
-https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/repo.json
+https://github.com/riddicknguyen-collab/temp-plugin-cs3/raw/refs/heads/builds/repo.json
 ```
 
 | Document | What it covers |

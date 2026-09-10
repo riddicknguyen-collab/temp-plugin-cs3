@@ -2,39 +2,85 @@
 
 ## Project Goal
 
-Build a private CloudStream 3 Kotlin provider for YanHH3D. The provider should scrape normal public HTML pages, expose home/category/search/detail/episode flows, return HLS `.m3u8` sources with headers, and fall back to CloudStream extractors for supported embed hosts.
+Maintain a personal CloudStream 3 Kotlin plugin repository with two production providers:
+
+- `YanHHProvider` scrapes the public YanHH3D HTML site for home, category, search, detail, episode, and playback flows.
+- `VsphimProvider` uses the public VSPHIM JSON API for catalog, search, detail, poster/thumb metadata, episodes, and HLS playback.
+
+Both providers must return safe results when upstream sites fail, preserve the headers required by image/video hosts, and publish installable `.cs3` artifacts through the `builds` branch.
+
+## Current Modules
+
+| Module | Current version | Data source | Notes |
+| --- | ---: | --- | --- |
+| `VsphimProvider` | 7 | `https://nguon.vsphim.com/api` | Runtime types include NSFW, Movie, and TvSeries. Homepage sections use real category slugs and 20 items per page. |
+| `YanHHProvider` | 8 | Public YanHH3D HTML | Current default domain is centralized in `YanHH3DConstants`; parser behavior is covered by HTML fixtures. |
+| `ExampleProvider` | 1 | Template/sample | Keep as an upstream module-shape reference, not production code. |
+
+When a module build file changes its version, update `CHANGELOG.md`, `README.md`, and the relevant plan document in the same change.
 
 ## Repository Structure
 
-- `.github/` - GitHub Actions workflow for building plugins and publishing generated `.cs3` artifacts to the `builds` branch.
-- `.vscode/` - Local editor settings for this template; do not rely on it for build behavior.
-- `docs/` - Product requirements and implementation planning documents for the YanHH3D provider.
-- `ExampleProvider/` - Working CloudStream sample plugin module; use it as the local reference for module shape, plugin entrypoint, resources, and Gradle metadata.
-- `YanHHProvider/` - The YanHH3D provider module: plugin entrypoint, provider, parser, domain resolver, constants, models, and parser tests with HTML fixtures.
-- `gradle/` - Gradle wrapper files; keep these in sync with the template and do not edit manually unless upgrading Gradle intentionally.
-- `build.gradle.kts` - Root Gradle configuration shared by all plugin modules, including Android, Kotlin, CloudStream, Jsoup, and build defaults.
-- `settings.gradle.kts` - Auto-includes every top-level directory that contains `build.gradle.kts`; a plugin folder is not a module until it has its own build file.
-- `gradle.properties` - Gradle and Android build settings for this repo.
-- `gradlew` - Unix Gradle wrapper entrypoint.
-- `gradlew.bat` - Windows Gradle wrapper entrypoint.
-- `repo.json` - Private CloudStream repository manifest; the URL added to CloudStream points at this file on the `builds` branch.
-- `CHANGELOG.md` - Release notes per plugin version.
-- `README.md` - Upstream CloudStream plugin template instructions.
-- `.gitignore` - Ignore rules for build output and local files.
+- `.github/workflows/build.yml` - builds every plugin and force-publishes `.cs3`, `plugins.json`, and `repo.json` to `builds`.
+- `VsphimProvider/` - VSPHIM plugin entrypoint, provider, API client, JSON/playback parsers, resolver, constants, models, mapping helpers, tests, and JSON fixtures.
+- `YanHHProvider/` - YanHH3D plugin entrypoint, provider, pure Jsoup parser, resolver, constants/selectors, models, tests, and HTML fixtures.
+- `ExampleProvider/` - original CloudStream sample plugin.
+- `docs/` - provider plans, VSPHIM API reference, YanHH3D PRD, release/setup guide, and captured upstream pages.
+- `build.gradle.kts` - shared AGP/Kotlin/CloudStream dependencies, Android defaults, and generated plugin-URL cache busting.
+- `settings.gradle.kts` - auto-includes each top-level directory containing `build.gradle.kts` unless disabled.
+- `repo.json` - CloudStream repository manifest copied to `builds`; its plugin list uses raw GitHub.
+- `CHANGELOG.md` - release notes for both providers.
+- `README.md` - project install/build summary followed by the retained upstream template documentation.
+- `gradle/`, `gradlew`, `gradlew.bat`, `gradle.properties` - Gradle wrapper and shared settings.
 
-## Implementation Rules
+Generated outputs such as module `build/` directories, root `build/plugins.json`, and `.cs3` files must not be committed to `main`.
 
-- Use `ExampleProvider` as the template, but implement production code under `YanHHProvider`.
-- Keep YanHH3D domain values in one constants/resolver file. Do not scatter `yanhh3d.love` or old domains through provider code.
-- Keep CSS selectors in one constants object so live-site selector changes are small.
-- Parser code should be pure Jsoup parsing with no network calls.
-- Provider code should own CloudStream API integration, HTTP requests, and model mapping.
-- Public provider methods should catch failures and return safe empty/null/false results.
+## Shared Implementation Rules
+
+- Keep production changes inside the target provider module; do not use `ExampleProvider` for real provider code.
+- Centralize domains, API paths, route parameters, and selectors in constants/resolver files. Do not scatter live or historical domains through provider logic.
+- Keep parsers deterministic and network-free. Provider/API-client code owns HTTP calls and CloudStream model mapping.
+- Keep parser tests independent of `com.lagradost` runtime classes so JVM tests can run without the CloudStream app.
+- Public provider methods must catch upstream/network/parser failures and return safe empty, null, or false results.
+- Preserve `User-Agent`, `Referer`, and `Origin` where required for posters, player pages, HLS manifests, and segments.
+- Prefer focused Kotlin files and mapping helpers over one large provider file.
 - Do not use WebView, browser automation, CAPTCHA bypass, DRM bypass, login bypass, cookie harvesting, downloading, mirroring, or rehosting.
-- Preserve `Referer` and `User-Agent` headers for direct HLS links.
-- Prefer small focused Kotlin files over one large provider file.
+- Do not raise Jackson above `2.13.1` without Android compatibility testing; the root build intentionally pins that version.
+- Treat `cloudstream3:pre-release` and the CloudStream Gradle plugin as moving dependencies. Validate with refreshed dependencies when changing build tooling.
 
-## YanHHProvider Layout
+## VsphimProvider Rules And Layout
+
+```text
+VsphimProvider/
+  build.gradle.kts
+  src/main/AndroidManifest.xml
+  src/main/kotlin/com/vsphim/VsphimPlugin.kt
+  src/main/kotlin/com/vsphim/VsphimProvider.kt
+  src/main/kotlin/com/vsphim/VsphimApiClient.kt
+  src/main/kotlin/com/vsphim/VsphimJsonParser.kt
+  src/main/kotlin/com/vsphim/VsphimPlaybackParser.kt
+  src/main/kotlin/com/vsphim/VsphimDomainResolver.kt
+  src/main/kotlin/com/vsphim/VsphimConstants.kt
+  src/main/kotlin/com/vsphim/VsphimModels.kt
+  src/main/kotlin/com/vsphim/VsphimMapping.kt
+  src/test/kotlin/com/vsphim/*.kt
+  src/test/resources/vsphim/*.json
+```
+
+Current VSPHIM behavior:
+
+- `Mới cập nhật` uses `/api/danh-sach?limit=20&page=n`.
+- Homepage category sections use `/api/the-loai/{slug}?limit=20&page=n`. The current stable sections are Vietsub, 18 tuổi, Hành động, Nhật Bản, Trung Quốc, 3D, 4K, and HD.
+- Do not generate homepage sections from the entire `/api/the-loai` catalog; the live taxonomy contains thousands of noisy and nearly empty tags.
+- Sort list responses by `modified.time` descending, with `_id` descending as fallback.
+- Enrich homepage and search cards through `/api/phim/{slug}` and cache detail responses for the provider session.
+- Use `poster_url` for card/detail posters and `thumb_url` for `backgroundPosterUrl`; fall back between them when one is blank.
+- Flatten `episodes[].server_data[]`, retain the server name, and deduplicate by playable URL.
+- Fetch `link_embed` as a player page. `VsphimPlaybackParser` may accept a direct playlist, signed master URL, or `baseUrl + videoHash`; otherwise use CloudStream extractors.
+
+The VSPHIM API contract and observed response differences are documented in `docs/tham-khao/vsphim-api-reference.md`.
+
+## YanHHProvider Rules And Layout
 
 ```text
 YanHHProvider/
@@ -50,41 +96,84 @@ YanHHProvider/
   src/test/resources/yanhh3d/*.html
 ```
 
+YanHH3D-specific rules:
+
+- Keep all historical/current domains in `YanHH3DConstants.KNOWN_DOMAINS` and remap stored URLs through `YanHH3DDomainResolver`.
+- Keep CSS selectors in `YanHH3DSelectors` so live markup changes remain localized.
+- `YanHH3DParser` must remain pure Jsoup parsing with no network or CloudStream imports.
+- The detail page and watch page have different responsibilities; consult current fixtures and captured pages before changing episode extraction.
+- Preserve poster headers and playback context headers for direct media links.
+
+The live-site implementation record is in `docs/plan.md`; the older PRD is useful context but is not the source of truth for current selectors.
+
 ## Build Prerequisites
 
-- JDK 17 with `JAVA_HOME` set. AGP 8.7.3 requires it; the build fails outright without it.
-- Android SDK with `platform-tools`, `platforms;android-35` and `build-tools;35.0.0`, and `ANDROID_HOME` set.
-- The `cloudstream3:pre-release` stub is a moving tag. When it is rebuilt with a newer Kotlin, `compileDebugKotlin` fails with an incompatible-metadata error and `kotlin-gradle-plugin` in the root `build.gradle.kts` has to be raised to match.
+- JDK 17 with `JAVA_HOME` set.
+- Android SDK with `platform-tools`, `platforms;android-35`, and `build-tools;35.0.0`; set `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
+- Gradle wrapper 8.12.
+- Android Gradle Plugin 8.7.3.
+- Kotlin Gradle Plugin 2.4.10.
 
-Setup steps are in `docs/adding-a-new-provider.md`.
+The CloudStream Gradle plugin currently resolves from JitPack as `com.github.recloudstream.gradle:gradle:-SNAPSHOT`. JitPack occasionally returns a transient “Could not find ... -SNAPSHOT” error on a clean runner. Confirm the coordinate still exists and rerun before changing it; direct commit-version coordinates have not resolved reliably.
+
+If the moving `cloudstream3:pre-release` stub is rebuilt with newer Kotlin metadata, `compileDebugKotlin` may require raising the root Kotlin plugin to a compatible version.
+
+Setup details are in `docs/adding-a-new-provider.md`.
 
 ## Build And Test Commands
 
-Use Windows commands in this workspace:
+Use PowerShell commands in this workspace:
 
 ```powershell
 .\gradlew.bat tasks --all
+.\gradlew.bat VsphimProvider:test
+.\gradlew.bat VsphimProvider:make
 .\gradlew.bat YanHHProvider:test
 .\gradlew.bat YanHHProvider:make
 .\gradlew.bat ExampleProvider:make
 .\gradlew.bat make makePluginsJson
 ```
 
-If `YanHHProvider:make` is not listed, create `YanHHProvider/build.gradle.kts` first. `settings.gradle.kts` will auto-include it after the build file exists.
+Use this when reproducing a clean CI dependency resolution:
 
-Unit tests run on the JVM with no CloudStream classes on the runtime classpath. That is why the parser must not import anything from `com.lagradost`, and why quality values live in `YanHH3DQualities` instead of `Qualities`.
+```powershell
+.\gradlew.bat VsphimProvider:test --refresh-dependencies
+```
 
-## Release
+Expected outputs:
 
-- `main` holds source; the GitHub Actions workflow publishes `.cs3`, `plugins.json` and `repo.json` to the `builds` branch.
-- Adding a provider needs no change to `repo.json`; `plugins.json` is generated from every module.
-- Bump the module `version` whenever selectors, default domain, source extraction, or build output change, otherwise CloudStream will not offer the update.
-- The repository must be public for CloudStream to read the raw URL.
+- `VsphimProvider/build/VsphimProvider.cs3`
+- `YanHHProvider/build/YanHHProvider.cs3`
+- `ExampleProvider/build/ExampleProvider.cs3`
+- `build/plugins.json`
 
-## Planning Notes
+`VsphimProvider:test` is the scoped regression suite for VSPHIM. The latest VSPHIM plan records that YanHHProvider currently has fixture/domain expectation drift, so do not attribute an existing YanHH test failure to a VSPHIM-only change without inspecting it.
 
-- Step-by-step guide for adding another provider: `docs/adding-a-new-provider.md`.
-- Implementation plan and its per-phase status: `docs/plan.md`.
-- Product requirements: `docs/YanHH3D_CloudStream_Plugin_PRD.md`.
-- Release notes per version: `CHANGELOG.md`.
-- Keep `README.md` as template documentation; project-specific docs live in `docs/`.
+## Release And Installation
+
+- `main` stores source; `builds` stores generated artifacts and manifests.
+- The workflow builds all modules with `make makePluginsJson`, copies artifacts to the `builds` checkout, and force-updates that branch.
+- Root-level Markdown-only pushes matching the workflow's `*.md` ignore rule do not publish a new build. A version/code/build-file change is required for a release.
+- Bump a module's integer `version` whenever provider behavior or its `.cs3` output changes; otherwise CloudStream will not offer an update.
+- `makePluginsJson` appends `?cache=$GITHUB_SHA` to raw `.cs3` URLs. Keep this cache token: without it, raw/CDN caches may serve plugin metadata for a new version with an older binary.
+- The canonical repository URL is:
+
+```text
+https://raw.githubusercontent.com/riddicknguyen-collab/temp-plugin-cs3/builds/repo.json
+```
+
+- `repo.json` points to raw `builds/plugins.json`; generated plugin entries point to raw `.cs3` artifacts with a commit cache token.
+- The GitHub repository must remain public for CloudStream to read raw branch files.
+- After publishing, verify both the `version` in `plugins.json` and `manifest.json` inside the downloaded `.cs3`. Matching metadata alone does not prove the binary cache is current.
+
+## Documentation Map
+
+- `docs/adding-a-new-provider.md` - setup, module scaffolding, testing, and release guide.
+- `docs/plan-vsphim-provider.md` - VSPHIM v7 scope, category homepage behavior, and implementation status.
+- `docs/tham-khao/vsphim-api-reference.md` - VSPHIM API endpoints and observed response schemas.
+- `docs/plan.md` - YanHH3D implementation history and current caveats.
+- `docs/YanHH3D_CloudStream_Plugin_PRD.md` - original YanHH3D product requirements.
+- `docs/doi-domain-trong-2-phut.md` - domain-change procedure.
+- `CHANGELOG.md` - provider release notes.
+
+Before editing, run `git status --short` and preserve unrelated user changes. In particular, never stage an already modified workflow or generated artifact unless it is explicitly part of the requested change.
