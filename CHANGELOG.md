@@ -1,5 +1,9 @@
 # Changelog
 
+## VSPHIM v2
+
+- Marked the provider metadata as `NSFW` for CloudStream's adult-content filtering.
+
 ## VSPHIM v1
 
 - Added a standalone `VsphimProvider` using the public VSPHIM JSON API.
